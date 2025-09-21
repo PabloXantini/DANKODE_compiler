@@ -8,9 +8,12 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 public class MenuBar extends JPanel{
-    private Color colbtn1;
+    //Colors
     private Color background;
+    private Color colbtn1;
+    //Components
     private JButton btnCompile;
+    //Method stuff
     private void styleMenuButton(JButton btn){
         btn.setBackground(colbtn1);
         btn.setPreferredSize(new Dimension(40,40));
@@ -19,9 +22,11 @@ public class MenuBar extends JPanel{
         background = new Color(255, 255, 255);
         colbtn1 = new Color(255, 255, 255);
         btnCompile = new JButton();
-        styleMenuButton(btnCompile);
-        setBackground(background);
+        //Structuring
         setLayout(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         add(btnCompile);
+        //Styles
+        setBackground(background);
+        styleMenuButton(btnCompile);
     }
 }
