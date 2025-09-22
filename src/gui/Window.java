@@ -3,12 +3,10 @@ package gui;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
-//import javax.swing.JPanel;
-//import javax.swing.border.EmptyBorder;
 
 public class Window extends JFrame {
     private static final long serialVersionUID = 1L;
-    private GUI gui;
+    private static GUI gui;
     public Window(){
         setTitle("DANKIDE");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -24,6 +22,7 @@ public class Window extends JFrame {
                 try{
                     Window window = new Window();
                     window.setVisible(true);
+                    gui.focusEditor();
                 }catch (Exception e){
                     e.printStackTrace();
                 }
