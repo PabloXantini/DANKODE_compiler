@@ -10,10 +10,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import gui.components.IDEScrollbarUI;
+import gui.components.IDELineNumberGutterUI;
 
 public class TextEditor extends JPanel{
     //Components
     private JTextArea codeText;
+    private IDELineNumberGutterUI lineCounter;
     private JScrollPane scrollPane;
     //Component properties
     //CodeText
@@ -21,24 +23,22 @@ public class TextEditor extends JPanel{
     private Color bgcolor_scroll;
     private Color color_scroll;
     private Color fontColor;
-    private int fontsize = 16*5;
+    private int fontsize = 16;
     //Method Stuff
     private void styleCodeEditor(){
         JScrollBar vertical = scrollPane.getVerticalScrollBar();
         JScrollBar horizontal = scrollPane.getHorizontalScrollBar();
         codeText.setBackground(background);
         codeText.setFont(new Font("Consolas", Font.PLAIN, fontsize));
-        // vertical.setBackground(bgcolor_scroll);
-        // vertical.setForeground(bgcolor_scroll);
-        // horizontal.setBackground(bgcolor_scroll);
-        // horizontal.setForeground(bgcolor_scroll);
-        //Thumb
+        lineCounter.setBackground(background);
         IDEScrollbarUI vscrollUI = new IDEScrollbarUI();
         IDEScrollbarUI hscrollUI = new IDEScrollbarUI();
         vscrollUI.setTrackColor(bgcolor_scroll);
         vscrollUI.setThumbColor(color_scroll);
         hscrollUI.setTrackColor(bgcolor_scroll);
         hscrollUI.setThumbColor(color_scroll);
+        vertical.setUnitIncrement(6);
+        horizontal.setUnitIncrement(6);
         vertical.setUI(vscrollUI);
         horizontal.setUI(hscrollUI);
     } 
@@ -47,16 +47,22 @@ public class TextEditor extends JPanel{
         bgcolor_scroll = new Color(128,128,128);
         color_scroll = new Color(200,200,200);
         codeText = new JTextArea();
+        lineCounter = new IDELineNumberGutterUI(codeText);
         scrollPane = new JScrollPane(codeText, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         //Structuring
         setFocusable(true);
         setLayout(new BorderLayout());
+        scrollPane.setRowHeaderView(lineCounter);
         add(scrollPane, BorderLayout.CENTER);
         //Styles
         setBackground(background);
         styleCodeEditor();
+        //Events Listener
     }
     public JTextArea getCodeText(){
         return this.codeText;
     }
+    public void update(){
+        lineCounter.repaint();
+    } 
 }

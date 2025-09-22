@@ -2,7 +2,6 @@ package gui.components;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Rectangle;
 
 import javax.swing.JComponent;
@@ -21,7 +20,6 @@ public class IDEScrollbarUI extends BasicScrollBarUI {
     }
     @Override
     protected void configureScrollBarColors() {
-        super.configureScrollBarColors();
         this.thumbColor=thumb_color;
         this.thumbHighlightColor=thumb_color;
         this.trackColor=track_color;
@@ -29,17 +27,13 @@ public class IDEScrollbarUI extends BasicScrollBarUI {
     @Override
     protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
         super.paintThumb(g, c, thumbBounds);
-        Graphics2D g2 = (Graphics2D)g.create();
-        g2.fillRect(thumbBounds.x, thumbBounds.y, thumbBounds.width, thumbBounds.height);
-        g2.setColor(thumbColor);
-        g2.dispose();
+        g.fillRect(thumbBounds.x, thumbBounds.y, thumbBounds.width, thumbBounds.height);
+        g.setColor(thumbColor);
     }
     @Override
     protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
         super.paintTrack(g, c, trackBounds);
-        Graphics2D g2 = (Graphics2D)g.create();
-        g2.fillRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height);
-        g2.setColor(trackColor);
-        g2.dispose();
+        g.fillRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height);
+        g.setColor(trackColor);
     }
 }
