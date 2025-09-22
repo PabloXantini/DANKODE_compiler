@@ -1,21 +1,23 @@
 package gui.components;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
-import java.awt.Point;
-import java.awt.Rectangle;
 
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
-import javax.swing.JViewport;
-import javax.swing.JScrollPane;
 
 public class IDELineNumberGutterUI extends JPanel {
+    private Color line_color;
     private JTextArea textArea;
     public IDELineNumberGutterUI(JTextArea textArea){
         this.textArea = textArea;
-        setPreferredSize(new Dimension(40, textArea.getHeight()));
+        this.line_color = Color.BLACK;
+        setPreferredSize(new Dimension(60, Integer.MAX_VALUE));
+    }
+    public void setLineColor(Color line_color) {
+        this.line_color = line_color;
     }
     @Override
     protected void paintComponent(Graphics g) {
@@ -28,11 +30,16 @@ public class IDELineNumberGutterUI extends JPanel {
         int lineHeight = fM.getHeight();
         //Visible Lines Preset
         int visibleLines = textArea.getHeight()/lineHeight;
+        //Gutter
+        int gutterWidth = getWidth();
         //Draw numbers
+        g.setColor(line_color);
         for(int i=0; i<visibleLines&&i<lines; i++){
             int lineNumber = i+1;
+            int numStr = fM.stringWidth(String.valueOf(lineNumber));
+            int x=gutterWidth-numStr-10;
             int y=(i+1)*lineHeight-descent;
-            g.drawString(String.valueOf(lineNumber), 10, y);
+            g.drawString(String.valueOf(lineNumber), x, y);
         }
     }
 }

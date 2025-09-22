@@ -27,14 +27,19 @@ public class TextEditor extends JPanel{
     private Color bgcolor_scroll;
     private Color color_scroll;
     private Color fontColor;
+    private Color lfontColor;
     private int fontsize = 16;
     //Method Stuff
     private void styleCodeEditor(){
         JScrollBar vertical = scrollPane.getVerticalScrollBar();
         JScrollBar horizontal = scrollPane.getHorizontalScrollBar();
+        codeText.setBorder(null);
         codeText.setBackground(background);
+        codeText.setForeground(fontColor);
         codeText.setFont(new Font("Consolas", Font.PLAIN, fontsize));
+        scrollPane.setBorder(null);
         lineCounter.setBackground(background);
+        lineCounter.setLineColor(lfontColor);
         IDEScrollbarUI vscrollUI = new IDEScrollbarUI();
         IDEScrollbarUI hscrollUI = new IDEScrollbarUI();
         vscrollUI.setTrackColor(bgcolor_scroll);
@@ -50,6 +55,8 @@ public class TextEditor extends JPanel{
         background = new Color(204, 255, 255);
         bgcolor_scroll = new Color(128,128,128);
         color_scroll = new Color(200,200,200);
+        fontColor = new Color(0,0,0);
+        lfontColor = new Color(64,64,64);
         codeText = new JTextArea();
         lineCounter = new IDELineNumberGutterUI(codeText);
         scrollPane = new JScrollPane(codeText, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -59,6 +66,7 @@ public class TextEditor extends JPanel{
         scrollPane.setRowHeaderView(lineCounter);
         add(scrollPane, BorderLayout.CENTER);
         //Styles
+        setBorder(null);
         setBackground(background);
         styleCodeEditor();
         //Events Listener
