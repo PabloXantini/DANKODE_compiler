@@ -1,5 +1,7 @@
 package gui;
 
+import java.util.EventListener;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
@@ -8,6 +10,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import gui.components.IDEScrollbarUI;
 import gui.components.IDELineNumberGutterUI;
@@ -58,11 +62,38 @@ public class TextEditor extends JPanel{
         setBackground(background);
         styleCodeEditor();
         //Events Listener
+        codeText.getDocument().addDocumentListener(new EditorEvent(this));
     }
     public JTextArea getCodeText(){
         return this.codeText;
     }
-    public void update(){
-        lineCounter.repaint();
+    public IDELineNumberGutterUI getGutter(){
+        return this.lineCounter;
     } 
+}
+
+class EditorEvent implements DocumentListener {
+    TextEditor editorContext;
+    public EditorEvent(){
+    }
+    public EditorEvent(TextEditor editor){
+        this.editorContext = editor;
+    }
+    @Override
+    public void insertUpdate(DocumentEvent e) {
+        // TODO Auto-generated method stub
+        this.editorContext.getGutter().repaint();
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent e) {
+        // TODO Auto-generated method stub
+        this.editorContext.getGutter().repaint();
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent e) {
+        // TODO Auto-generated method stub
+    }
+    
 }

@@ -20,6 +20,5 @@ public class GUI extends JPanel {
     }
     public void focusEditor(){
         textEditor.getCodeText().requestFocusInWindow();
-        textEditor.update();
     }
 }
