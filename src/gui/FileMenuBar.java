@@ -7,6 +7,8 @@ import java.awt.FlowLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+import ide.actions_tools.analysis.CompileAction;
+
 public class FileMenuBar extends JPanel{
     //Colors
     private Color background;
@@ -18,7 +20,7 @@ public class FileMenuBar extends JPanel{
         btn.setBackground(colbtn1);
         btn.setPreferredSize(new Dimension(40,40));
     }
-    FileMenuBar(){
+    public FileMenuBar(){
         background = new Color(255, 255, 255);
         colbtn1 = new Color(255, 255, 255);
         btnCompile = new JButton();
@@ -29,5 +31,9 @@ public class FileMenuBar extends JPanel{
         setBackground(background);
         setBorder(null);
         styleMenuButton(btnCompile);
+        //Events
+    }
+    public JButton getBtnCompile(){
+        return this.btnCompile;
     }
 }

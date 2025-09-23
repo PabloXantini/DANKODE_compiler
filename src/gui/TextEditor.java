@@ -69,7 +69,7 @@ public class TextEditor extends JPanel{
         setBorder(null);
         setBackground(background);
         styleCodeEditor();
-        //Events Listener
+        //Event Listeners
         codeText.getDocument().addDocumentListener(new EditorEvent(this));
     }
     public JTextArea getCodeText(){
