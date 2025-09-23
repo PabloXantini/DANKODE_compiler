@@ -52,7 +52,7 @@ public class MenuBar extends JPanel{
         panelIDETools.setBackground(background);
         panelWinTools.setBackground(background);
         setBackground(background);
-        setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, border_color));
+        setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, border_color));
         styleMenuButton(btnArchive);
         styleWindowButton(btnMin);
         styleWindowButton(btnMax);
