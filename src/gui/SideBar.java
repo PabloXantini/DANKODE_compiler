@@ -69,6 +69,7 @@ public class SideBar extends JPanel{
         panelContent.setBackground(background);
         panelContent.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 2, border_color));
         panelContent.setPreferredSize(new Dimension(250, 0));
+        panelContent.setVisible(false);
         styleSideBarButton(btnDebugAnalysis);
         //Events
         btnDebugAnalysis.setToolTipText("Analizar depuración y compilación");
