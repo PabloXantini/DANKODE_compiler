@@ -41,6 +41,7 @@ public class FileMenuBar extends JPanel{
         setBorder(null);
         styleMenuButton(btnCompile);
         //Events
+        btnCompile.setToolTipText("Compilar y Analizar");
     }
     public JButton getBtnCompile(){
         return this.btnCompile;
