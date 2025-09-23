@@ -7,6 +7,11 @@ import java.io.PrintWriter;
 import java.util.*;
 
 public class Sementico {
+    private static int GLOBAL_ERROR_COUNTER = 0;
+    public static synchronized String nextErrorToken() {
+        GLOBAL_ERROR_COUNTER++;
+        return "Error" + GLOBAL_ERROR_COUNTER;
+    }
 
     public static class Symbol {
         public final String name;
@@ -23,6 +28,7 @@ public class Sementico {
     }
 
     public static class SemError {
+        public final String id; 
         public final String phase; // "semantic" 
         public final String token; // "ID", de nuestros tokens
         public final String lexeme; // variable
@@ -30,11 +36,23 @@ public class Sementico {
         public final String description;
 
         public SemError(String phase, String token, String lexeme, int line, String description) {
+            this.id = Sementico.nextErrorToken();
             this.phase = phase;
             this.token = token;
             this.lexeme = lexeme;
             this.line = line;
             this.description = description;
+
+        }
+        @Override
+        public String toString() {
+            return String.format("%s [%s] (%s:%s) @%d -> %s",
+                id,
+                phase,
+                token == null ? "-" : token,
+                lexeme == null ? "-" : lexeme,
+                line,
+                description);
         }
     }
 
@@ -266,13 +284,19 @@ public class Sementico {
 
     // Exporta CSV errores
     private void exportErrorsCSV(String path, List<SemError> errs) throws IOException {
-        try (PrintWriter pw = new PrintWriter(new FileWriter(path))) {
-            pw.println("Fase,Token,Lexema,Linea,Descripcion");
-            for (SemError e : errs) {
-                pw.println(csvEscape(e.phase) + "," + csvEscape(e.token) + "," + csvEscape(e.lexeme) + "," + e.line + "," + csvEscape(e.description));
-            }
+    try (PrintWriter pw = new PrintWriter(new FileWriter(path))) {
+        pw.println("ID,Fase,Token,Lexema,Linea,Descripcion");
+        for (SemError e : errs) {
+            pw.println(csvEscape(e.id) + "," 
+                    + csvEscape(e.phase) + "," 
+                    + csvEscape(e.token) + "," 
+                    + csvEscape(e.lexeme) + "," 
+                    + e.line + "," 
+                    + csvEscape(e.description));
         }
     }
+}
+
 
     // Escapa una cadena para CSV (comillas dobles y comillas internas)
     private static String csvEscape(String s) {

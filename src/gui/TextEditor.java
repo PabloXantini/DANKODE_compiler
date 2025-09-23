@@ -1,7 +1,5 @@
 package gui;
 
-import java.util.EventListener;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;

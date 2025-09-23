@@ -1,7 +1,9 @@
 package gui;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 
 import javax.swing.JPanel;
 import javax.swing.BorderFactory;
@@ -10,6 +12,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 
 import gui.components.IDEButtonUI;
+import gui.sections.SymbolTableViewer;
 
 public class SideBar extends JPanel{
     //Colors
@@ -20,6 +23,12 @@ public class SideBar extends JPanel{
     //Icons
     private ImageIcon icon1;
     //Components
+    private JPanel panelIDETools;
+    private JPanel panelContent;
+    //There must be here a handler
+    private SymbolTableViewer symbolViewer;
+    //
+
     //private JButton btnFileManager;
     private IDEButtonUI btnDebugAnalysis;
     //Method Stuff
@@ -35,20 +44,31 @@ public class SideBar extends JPanel{
     }
     SideBar(){
         background = new Color(102, 178, 255);
-        border_color = new Color(120, 190, 255);
+        border_color = new Color(153, 194, 255);
         //colbtn1 = new Color(255, 255, 255);
         colicon = new Color(173,224,255);
         icon1 = new ImageIcon("res/icons/analysis.png");
+        panelIDETools = new JPanel();
+        panelContent = new JPanel();
         //btnFileManager = new JButton();
         btnDebugAnalysis = new IDEButtonUI(icon1);
+        symbolViewer = new SymbolTableViewer();
         //Structuring
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        panelIDETools.setLayout(new BoxLayout(panelIDETools, BoxLayout.Y_AXIS));
+        panelContent.setLayout(new BoxLayout(panelContent, BoxLayout.Y_AXIS));
+        setLayout(new BorderLayout());
+        add(panelIDETools, BorderLayout.WEST);
+        add(panelContent, BorderLayout.EAST);
         //add(btnFileManager);
-        add(btnDebugAnalysis);
+        panelIDETools.add(btnDebugAnalysis);
+        panelContent.add(symbolViewer); 
         //Styles
-        setBackground(background);
-        setBorder(BorderFactory.createMatteBorder(0, 0, 0, 2, border_color));
-        //styleSideBarButton(btnFileManager);
+        panelIDETools.setBackground(background);
+        panelIDETools.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 2, border_color));
+        panelIDETools.setPreferredSize(new Dimension(50, 0));
+        panelContent.setBackground(background);
+        panelContent.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 2, border_color));
+        panelContent.setPreferredSize(new Dimension(250, 0));
         styleSideBarButton(btnDebugAnalysis);
         //Events
         btnDebugAnalysis.setToolTipText("Analizar depuración y compilación");

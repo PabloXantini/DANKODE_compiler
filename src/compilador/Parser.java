@@ -269,7 +269,7 @@ public class Parser {
             if (raw.length() >= 2) raw = raw.substring(1, raw.length() - 1);
             return new Literal(raw, "chara");
         }
-        // masturVariables
+        // Variables
         if (accept("ID")) {
             return new VarRef(tokens.get(pos - 1).lexeme, tokens.get(pos - 1).line);
         }
@@ -359,9 +359,17 @@ public class Parser {
     }
 
     public static class SyntaxError {
-        public final String token; public final String lexeme; public final int line; public final String description;
+        
+        public final String token; 
+        public final String lexeme; 
+        public final int line; 
+        public final String description;
+
         public SyntaxError(String token, String lexeme, int line, String description) {
-            this.token = token; this.lexeme = lexeme; this.line = line; this.description = description;
+            this.token = token; 
+            this.lexeme = lexeme; 
+            this.line = line; 
+            this.description = description;
         }
         @Override public String toString() { return String.format("SyntaxError(%s:%s) @%d -> %s", token, lexeme, line, description); }
     }
@@ -369,7 +377,7 @@ public class Parser {
     public static void main(String[] args) {
         String source = ""
             + "nummy papuvar_abc_Def_1 = (10 * 7);\n"
-            + "numpt papuvar#X_ = 2.5;\n"
+            + "numpt papuvar#X_ = \"2.5\";\n"
             + "chara papuvar_hey# = \"hola\";\n"
             + "papuvar_abc_Def_1 = papuvar_abc_Def_1 + 1;\n"
             + "while (papuvar_abc_Def_1 <= 20 && papuvar_abc_Def_1 > 0 ) {\n"
@@ -377,7 +385,7 @@ public class Parser {
             + "}\n"
             + "if (papuvar#X_ >= 2.5) { papuvar_hey# = papuvar_hey#; } else { papuvar_hey# = \"otro\"; }\n";
 
-        Lex.LexResult lr = Lex.lex(source);// Analizador lésbico
+        Lex.LexResult lr = Lex.lex(source);// Analizador léxico
         Parser p = new Parser(lr.tokens); // Parser, lo único que hacemos es guardar las tokens en el atributo tokens de este archivo
         Program prog = p.parseProgram(); // Ahora sí creamos el árbol
 
