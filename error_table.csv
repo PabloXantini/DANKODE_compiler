@@ -1,2 +1,5 @@
 ID,Fase,Token,Lexema,Linea,Descripcion
-"Error1","semantic",,"papuvar_abc_Def_1",4,"Incompatibilidad: no se puede asignar numpt a nummy"
+"Error5","semantic","ID","papuvar#X_7",8,"Variable no declarada"
+"Error6","semantic",,,9,"Operación inválida '*' entre numpt y chara"
+"Error7","semantic",,,10,"Operación inválida '+' entre nummy y chara"
+"Error8","semantic",,"papuvar_hey#",10,"Incompatibilidad: no se puede asignar nummy a chara"

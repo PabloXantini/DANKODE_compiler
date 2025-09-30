@@ -359,19 +359,22 @@ public class Parser {
     }
 
     public static class SyntaxError {
-        
+        public final String id;
         public final String token; 
         public final String lexeme; 
         public final int line; 
         public final String description;
 
         public SyntaxError(String token, String lexeme, int line, String description) {
+            this.id = Semantico.nextErrorToken();
             this.token = token; 
             this.lexeme = lexeme; 
             this.line = line; 
             this.description = description;
         }
-        @Override public String toString() { return String.format("SyntaxError(%s:%s) @%d -> %s", token, lexeme, line, description); }
+        @Override public String toString() { 
+            return String.format("%s [syntax] (%s:%s) @%d -> %s", id, token == null ? "-" : token, lexeme == null ? "-" : lexeme, line, description);
+        }
     }
 
     public static void main(String[] args) {

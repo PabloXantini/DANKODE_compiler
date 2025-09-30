@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
-public class Sementico {
+public class Semantico {
     private static int GLOBAL_ERROR_COUNTER = 0;
     public static synchronized String nextErrorToken() {
         GLOBAL_ERROR_COUNTER++;
@@ -36,7 +36,7 @@ public class Sementico {
         public final String description;
 
         public SemError(String phase, String token, String lexeme, int line, String description) {
-            this.id = Sementico.nextErrorToken();
+            this.id = Semantico.nextErrorToken();
             this.phase = phase;
             this.token = token;
             this.lexeme = lexeme;
@@ -66,7 +66,7 @@ public class Sementico {
                                         List<Parser.SyntaxError> parseErrors,
                                         String symbolCsvPath,
                                         String errorCsvPath) {
-        Sementico analyzer = new Sementico();
+        Semantico analyzer = new Semantico();
         analyzer.analyzeProgram(prog);
 
         // convertir errores léxicos y sintácticos a SemError (para reportar juntos)

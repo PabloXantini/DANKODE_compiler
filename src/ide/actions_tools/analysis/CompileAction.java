@@ -20,7 +20,7 @@ public class CompileAction implements ActionListener{
         Parser parser = new Parser(output.tokens);
         Parser.Program ast = parser.parseProgram();
         System.out.println(ast);
-        Sementico.analyzeAndExport(ast, output.errors, parser.errors, "symbol_table.csv", "error_table.csv");
+        Semantico.analyzeAndExport(ast, output.errors, parser.errors, "symbol_table.csv", "error_table.csv");
     }
     public CompileAction(JTextArea textArea){
         this.textArea = textArea;
