@@ -65,16 +65,19 @@ public class TokenTable {
         tokenTable.put(TokenType.MUL, new Regex("\\*"));
         tokenTable.put(TokenType.DIV, new Regex("/"));
         tokenTable.put(TokenType.MOD, new Regex("%"));
-        tokenTable.put(TokenType.LP, new Regex("("));
-        tokenTable.put(TokenType.RP, new Regex(")"));
-        tokenTable.put(TokenType.LB, new Regex("{"));
-        tokenTable.put(TokenType.RB, new Regex("}"));
+        tokenTable.put(TokenType.LP, new Regex("\\("));
+        tokenTable.put(TokenType.RP, new Regex("\\)"));
+        tokenTable.put(TokenType.LB, new Regex("\\{"));
+        tokenTable.put(TokenType.RB, new Regex("\\}"));
         tokenTable.put(TokenType.SEMICOLON, new Regex(";"));
         tokenTable.put(TokenType.COMMA ,new Regex(","));
         tokenTable.put(TokenType.CFLOAT, new Regex("\\d+.\\d+"));
         tokenTable.put(TokenType.CINT, new Regex("\\d+"));
         tokenTable.put(TokenType.CSTRING, new Regex("\"[^\"]*\""));
         tokenTable.put(TokenType.ID, new Regex("^papuvar[_#]([A-Za-z]+[_#])+[0-9]*"));
+    }
+    public EnumMap<TokenType,Regex> get(){
+        return this.tokenTable;
     }
     public Regex getRegex(TokenType type){
         return tokenTable.get(type);

@@ -19,7 +19,8 @@ public class Regex {
         Matcher matcher = regex.matcher(source);
         matcher.region(start, source.length());
         if(matcher.lookingAt()&&start>=0){
-            this.match = source.substring(start, matcher.end()); 
+            //this.match = source.substring(start, matcher.end());
+            this.match = matcher.group(); 
             return matcher.end();
         }else{
             return -1;
