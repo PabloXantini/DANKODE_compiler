@@ -1,7 +1,6 @@
 package dankcompiler.tokens;
 
 import java.util.EnumMap;
-import java.util.regex.Pattern;
 
 enum TokenCat{
     TYPE,
@@ -15,15 +14,6 @@ enum TokenCat{
 }
 
 public class TokenTable {
-    public static class Regex {
-        private final Pattern regex;
-        Regex(String sregex){
-            regex = Pattern.compile(sregex);
-        }
-        public Pattern getPattern(){
-            return regex;
-        }
-    }
     private final EnumMap<TokenType,Regex> tokenTable;
     private final EnumMap<TokenType,TokenCat> tokenCategories;
     public TokenTable(){

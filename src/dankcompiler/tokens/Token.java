@@ -1,14 +1,12 @@
 package dankcompiler.tokens;
 
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.regex.Pattern;
-
 public class Token {
     private final String symbol;
     private final TokenType type;
-    Token(String symbol, TokenType type){
+    private final TokenCat cat;
+    Token(String symbol, TokenType type, TokenCat cat){
         this.symbol = symbol;
         this.type = type;
+        this.cat = cat;
     }
 }
