@@ -7,6 +7,6 @@ public class Lexer extends FileHandler{
     }
     @Override
     public void doPerReadedLine(String currentLine) {
-        System.out.println(currentLine);
+        System.out.print(currentLine);
     }
 }

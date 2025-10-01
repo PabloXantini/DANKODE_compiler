@@ -1,0 +1,32 @@
+package dankcompiler.tokens;
+
+public enum TokenType {
+    P_TYPE,
+    WHILE,
+    IF,
+    ELSE,
+    AND,
+    OR,
+    EQUAL,
+    NONEQUAL,
+    GTE,
+    LTE,
+    GT,
+    LT,
+    PLUS,
+    MINUS,
+    MUL,
+    DIV,
+    MOD,
+    LP,
+    RP,
+    LB,
+    RB,
+    SEMICOLON,
+    COMMA,
+    CFLOAT,
+    CINT,
+    CSTRING,
+    ID,
+    UNDEFINED
+}
