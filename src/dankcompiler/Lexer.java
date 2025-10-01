@@ -46,6 +46,14 @@ public class Lexer extends FileHandler{
                 System.out.print(B_COMMENT_START.getMatch());
                 continue;
             }
+            //SPACES
+            if((tmp=SPACE.match(currentLine, cursor))!=-1){
+                cursor=tmp;
+                System.out.print(SPACE.getMatch());
+                continue;
+            }
+            //NOW THE TOKENS
+            
             cursor++;
         }
     }
