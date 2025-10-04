@@ -18,6 +18,7 @@ public enum TokenType {
     MUL,
     DIV,
     MOD,
+    ASSIGN,
     LP,
     RP,
     LB,

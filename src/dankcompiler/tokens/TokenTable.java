@@ -36,6 +36,7 @@ public class TokenTable {
         tokenCategories.put(TokenType.MUL, TokenCat.AR_OPERATOR);
         tokenCategories.put(TokenType.DIV, TokenCat.AR_OPERATOR);
         tokenCategories.put(TokenType.MOD, TokenCat.AR_OPERATOR);
+        tokenCategories.put(TokenType.ASSIGN, TokenCat.ASSIGNMENT);
         tokenCategories.put(TokenType.LP, TokenCat.DELIMITER);
         tokenCategories.put(TokenType.RP, TokenCat.DELIMITER);
         tokenCategories.put(TokenType.LB, TokenCat.DELIMITER);
@@ -65,6 +66,7 @@ public class TokenTable {
         tokenTable.put(TokenType.MUL, new Regex("\\*"));
         tokenTable.put(TokenType.DIV, new Regex("/"));
         tokenTable.put(TokenType.MOD, new Regex("%"));
+        tokenTable.put(TokenType.ASSIGN, new Regex("="));
         tokenTable.put(TokenType.LP, new Regex("\\("));
         tokenTable.put(TokenType.RP, new Regex("\\)"));
         tokenTable.put(TokenType.LB, new Regex("\\{"));
