@@ -5,7 +5,7 @@ import java.util.Set;
 
 import dankcompiler.errors.TokenError;
 import dankcompiler.errors.TokenErrorCode;
-import dankcompiler.errors.TokenErrorHandler;
+import dankcompiler.errors.CompileErrorHandler;
 import dankcompiler.errors.TokenErrorType;
 import dankcompiler.tokens.Regex;
 import dankcompiler.tokens.Token;
@@ -53,7 +53,7 @@ public class Lexer{
         TokenStream.add(token);
     }
     private void throwError(String lexem, int line, int column){
-        TokenError error = TokenErrorHandler.generateError(lexem, TokenErrorType.LEXICAL, line, column, TokenErrorCode.LEXEM_UNKNOWN);
+        TokenError error = CompileErrorHandler.generateError(lexem, TokenErrorType.LEXICAL, line, column, TokenErrorCode.LEXEM_UNKNOWN);
         ErrorStream.add(error);
     }
     public Lexer() {

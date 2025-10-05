@@ -1,17 +1,18 @@
-package dankcompiler.errors;
+package dankcompiler.messages;
 
 import java.util.EnumMap;
 
-import dankcompiler.Language;
+import dankcompiler.errors.TokenErrorCode;
+import dankcompiler.errors.TokenErrorType;
 
-public class ErrorMessage {
+public class MessageHandler {
     private final Language lang;
-    private final EnumMap<TokenErrorCode, String> messages;
+    private final EnumMap<TokenErrorCode, String> errorMessages;
     private final EnumMap<TokenErrorType, String> typeInfo;
-    public ErrorMessage(Language lang){
+    public MessageHandler(Language lang){
         this.lang = lang;
         this.typeInfo = new EnumMap<TokenErrorType, String>(TokenErrorType.class);
-        this.messages = new EnumMap<TokenErrorCode, String>(TokenErrorCode.class);
+        this.errorMessages = new EnumMap<TokenErrorCode, String>(TokenErrorCode.class);
         switch (lang) {
             case Language.ES:
                 createESMessages();
@@ -21,7 +22,7 @@ public class ErrorMessage {
         }
     }
     public String getMessagePlaceHolder(TokenErrorCode errorcode){
-        return messages.get(errorcode);
+        return errorMessages.get(errorcode);
     }
     public String getErrorTypeInfo(TokenErrorType type){
         return typeInfo.get(type);
@@ -30,6 +31,6 @@ public class ErrorMessage {
         //Phases
         typeInfo.put(TokenErrorType.LEXICAL, "Análisis Léxico");
         //Messages
-        messages.put(TokenErrorCode.LEXEM_UNKNOWN, "Lexema desconocido: %s");
+        errorMessages.put(TokenErrorCode.LEXEM_UNKNOWN, "Lexema desconocido: %s");
     }
 }

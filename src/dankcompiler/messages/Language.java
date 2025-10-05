@@ -1,4 +1,4 @@
-package dankcompiler;
+package dankcompiler.messages;
 
 public enum Language {
     ES,

@@ -3,16 +3,16 @@ package dankcompiler;
 import java.util.ArrayList;
 
 import dankcompiler.errors.TokenError;
-import dankcompiler.errors.TokenErrorHandler;
+import dankcompiler.messages.CompileMsgHandler;
 import dankcompiler.tokens.Token;
 
 public class Compiler extends FileHandler{
-    private TokenErrorHandler ErrorHandler;
+    private CompileMsgHandler MsgHandler;
     private Lexer lexer;
     private final ArrayList<TokenError> ErrorTable;
     public Compiler(String filepath){
         super(filepath);
-        ErrorHandler = new TokenErrorHandler();
+        MsgHandler = new CompileMsgHandler();
         lexer = new Lexer();
         ErrorTable = new ArrayList<TokenError>();
     }
@@ -27,8 +27,8 @@ public class Compiler extends FileHandler{
     }
     public void showErrors(){
         for(TokenError error : ErrorTable){
-            String message = ErrorHandler.generateMessage(error);
-            String errTypeInfo = ErrorHandler.verboseTypeError(error);
+            String message = MsgHandler.generateErrorMessage(error);
+            String errTypeInfo = MsgHandler.verboseTypeError(error);
             System.out.println(
                 "Codigo: "+error.code+
                 ", Fase: "+errTypeInfo+
