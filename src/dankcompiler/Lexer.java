@@ -3,6 +3,10 @@ package dankcompiler;
 import java.util.ArrayList;
 import java.util.Set;
 
+import dankcompiler.errors.TokenError;
+import dankcompiler.errors.TokenErrorCode;
+import dankcompiler.errors.TokenErrorHandler;
+import dankcompiler.errors.TokenErrorType;
 import dankcompiler.tokens.Regex;
 import dankcompiler.tokens.Token;
 import dankcompiler.tokens.TokenTable;
@@ -29,6 +33,8 @@ public class Lexer{
     private final TokenTable TokenReference;
     //TOKEN STREAM
     private final ArrayList<Token> TokenStream;
+    //CURRENT ERRORS
+    private final ArrayList<TokenError> ErrorStream;
     //Method stuff
     private String checkMatch(Regex regex, int next, boolean write){
         String lexem = regex.getMatch();
@@ -46,10 +52,18 @@ public class Lexer{
         Token token = new Token(lexem, type, TokenReference.getCategorie(type), line, column);
         TokenStream.add(token);
     }
+    private void throwError(String lexem, int line, int column){
+        TokenError error = TokenErrorHandler.generateError(lexem, TokenErrorType.LEXICAL, line, column, TokenErrorCode.LEXEM_UNKNOWN);
+        ErrorStream.add(error);
+    }
     public Lexer() {
         //Setup the token table
         TokenReference = new TokenTable();
         TokenStream = new ArrayList<Token>();
+        ErrorStream = new ArrayList<TokenError>();
+    }
+    public ArrayList<TokenError> getCurrentErrors(){
+        return ErrorStream;
     }
     public ArrayList<Token> generateTokenStream(String currentLine){
         int tmp;
@@ -57,6 +71,7 @@ public class Lexer{
         column=0;
         cursor=0;
         TokenStream.clear();
+        ErrorStream.clear();
         //Process inside a line
         while (cursor<currentLine.length()) {
             //If not comment block closed, skip line
@@ -100,7 +115,10 @@ public class Lexer{
                 }
             }
             if(!lexical_correct){
-                //Error
+                char unknown_lexem = currentLine.charAt(cursor);
+                String lexem = String.valueOf(unknown_lexem);
+                //Throw error
+                throwError(lexem, this.line, this.column);
                 cursor++;
             }      
         }
