@@ -68,7 +68,7 @@ public class Lexer{
     public ArrayList<Token> generateTokenStream(String currentLine){
         int tmp;
         line++;
-        column=0;
+        column=1;
         cursor=0;
         TokenStream.clear();
         ErrorStream.clear();

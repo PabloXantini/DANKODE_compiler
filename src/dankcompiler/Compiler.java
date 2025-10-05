@@ -26,8 +26,12 @@ public class Compiler extends FileHandler{
     public ArrayList<TokenError> getAllErrors(){
         return ErrorTable;
     }
+    public boolean thereErrors(){
+        if(ErrorTable.size()==0) return false;
+        return true;
+    }
     public void showErrors(){
-        if(ErrorTable.size()==0){
+        if(thereErrors()){
             System.out.println(MsgHandler.generateMessage(MessageType.ERRORS_NOT_FOUND_MESSAGE));
             return;
         }
