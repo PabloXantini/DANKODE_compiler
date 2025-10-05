@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import dankcompiler.errors.TokenError;
 import dankcompiler.messages.CompileMsgHandler;
+import dankcompiler.messages.MessageType;
 import dankcompiler.tokens.Token;
 
 public class Compiler extends FileHandler{
@@ -26,6 +27,11 @@ public class Compiler extends FileHandler{
         return ErrorTable;
     }
     public void showErrors(){
+        if(ErrorTable.size()==0){
+            System.out.println(MsgHandler.generateMessage(MessageType.ERRORS_NOT_FOUND_MESSAGE));
+            return;
+        }
+        System.out.println(MsgHandler.generateMessage(MessageType.ERRORS_FOUND_MESSAGE));
         for(TokenError error : ErrorTable){
             String message = MsgHandler.generateErrorMessage(error);
             String errTypeInfo = MsgHandler.verboseTypeError(error);

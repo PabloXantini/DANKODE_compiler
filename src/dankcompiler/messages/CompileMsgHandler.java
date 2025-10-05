@@ -12,6 +12,9 @@ public class CompileMsgHandler {
         this.default_language = lang;
         messages = new MessageHandler(default_language);
     }
+    public String generateMessage(MessageType msg){
+        return messages.getMessage(msg);
+    }
     public String generateErrorMessage(TokenError error){
         String output = messages.getMessagePlaceHolder(error.errorcode);
         output = String.format(output, error.lexem);       
@@ -20,5 +23,8 @@ public class CompileMsgHandler {
     //This is for interactive purpose
     public String verboseTypeError(TokenError error){
         return messages.getErrorTypeInfo(error.type);
+    }
+    public void changeMessage(MessageType msg, String new_message){
+        messages.setMessage(msg, new_message);
     }
 }
