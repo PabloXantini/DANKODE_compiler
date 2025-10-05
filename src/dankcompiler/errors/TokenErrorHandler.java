@@ -34,4 +34,8 @@ public class TokenErrorHandler {
         output = String.format(output, error.lexem);       
         return output;
     }
+    //This is for interactive purpose
+    public String verboseTypeError(TokenError error){
+        return messages.getErrorTypeInfo(error.type);
+    }
 }

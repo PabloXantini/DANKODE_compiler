@@ -22,10 +22,19 @@ public class Compiler extends FileHandler{
         dank.read();
         dank.showErrors();
     }
+    public ArrayList<TokenError> getAllErrors(){
+        return ErrorTable;
+    }
     public void showErrors(){
         for(TokenError error : ErrorTable){
             String message = ErrorHandler.generateMessage(error);
-            System.out.println("Codigo: "+error.code+" Mensaje: "+message+" Linea: "+error.line+" Columna: "+error.column);
+            String errTypeInfo = ErrorHandler.verboseTypeError(error);
+            System.out.println(
+                "Codigo: "+error.code+
+                ", Fase: "+errTypeInfo+
+                ", Mensaje: "+message+
+                ", Linea: "+error.line+
+                ", Columna: "+error.column);
         }
     }
     @Override
