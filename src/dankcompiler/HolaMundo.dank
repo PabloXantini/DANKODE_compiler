@@ -1,6 +1,23 @@
-nummy papuvar_hola_ = 12; //Comentario bebe
-numpt papuvar#jijija#12 = 30.5;
-/*Esto es un bloque bonito lo voy a matar
-*   LO SODIO A TODOS
-*   Jijija
-*   Xdxdxdx*/
+nummy papuvar_cont_, papuvar#max#, papuvar_HP_1;
+numpt papuvar_pos_x_1, papuvar_posy1, papuvar_time_;
+chara papuvar_name_, papuvar#max#, papuvar_time_; //2 DECLARACIONES DUPLICADAS E12
+papuvar_name_ = "Pablo Silson";
+papuvar_name_ = papuvar_name_ + 2;		//INCOMPATIBILIDAD ARITMÉTICA CADENA A1
+papuvar_cont_ = 0.001; 				//INCOMPATIBILIDAD DE ASIGNACIÓN ENTERO B1
+papuvar_HP_1 = 100;
+papuvar_danio_epico_ = 200.5;			//ASIGNACIÓN INDEFINIDA C1
+papuvar_hechizo#1 = "abada_kadabra";		//ASIGNACION INDEFINIDA C2
+papuvar_pos_x_1 = "0";				//INCOMPATIBILIDAD DE ASIGNACIÓN REAL B2
+papuvar_pos_y_1 = 0.0;
+while(papuvar_HP_1 > 0){
+	papuvar_last_time_ = papuvar_time_;			//ASIGNACION INDEFINIDA C3
+	papuvar_dt_ = papuvar_time_ - papuvar_last_time_; 	//ARITMÉTICA INDEFINIDA D1
+	papuvar_pos_x_1 = papuvar_pos_x_1 + 1 * papuvar_dt_;	//ARITMÉTICA INDEFINIDA D2
+	papuvar_pos_y_1 = papuvar_pos_y_1 + "2";		//INCOMPATIBILIDAD ARITMÉTICA REAL A2
+	papuvar_HP_1 = papuvar_HP_1 - papuvar_cont_ * 2.02; 	//INCOMPATIBILIDAD ARITMÉTICA ENTERO A3						
+	papuvar#max# = papuvar_prob_ * 1.5 + "2";		//ARITMÉTICA INDEFINIDA D3
+	papuvar_cont_ = papuvar_cont_ + 1;
+	papuvar_time_ = papuvar_time_ + 3.14;
+};
+papuvar_cont_ = 0;
+papuvar_name_ = 0; 				//INCOMPATIBILIDAD ASIGNACIÓN CADENA B3

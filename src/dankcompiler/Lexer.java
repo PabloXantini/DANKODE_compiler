@@ -119,6 +119,7 @@ public class Lexer{
                 String lexem = String.valueOf(unknown_lexem);
                 //Throw error
                 throwError(lexem, this.line, this.column);
+                column++;
                 cursor++;
             }      
         }
