@@ -11,8 +11,11 @@ import java.io.FileWriter;                  //Class for write new files with Pri
 public abstract class FileHandler {
     File tempOutput = null;
     PrintWriter writer = null;
-    String filepath;
+    String filepath = null;
+    //Read States
     String currentLine = "";
+    public FileHandler(){
+    }
     public FileHandler(String filepath){
         this.filepath = filepath;
     }
@@ -24,6 +27,7 @@ public abstract class FileHandler {
      * @return void
      */
     public void read(){
+        if (filepath==null) return;
         BufferedReader readBuffer = null;
         FileReader reader = null;
         try {
@@ -36,6 +40,7 @@ public abstract class FileHandler {
             while ((currentLine=readBuffer.readLine())!=null) {
                 doPerReadedLine(currentLine);
             }
+            doAtReadFinish();
         } catch (IOException error) {
             System.out.println("Error at read file: "+error);
         }
@@ -45,6 +50,11 @@ public abstract class FileHandler {
             System.out.println("Error at close file: "+error);
         }
     }
+    /**
+     * Focus the file write output
+     * @param new_archive is the archive name
+     * @param folderpath is the directory, if there is not directory existent, it creates a new one
+     */
     public void focusFileOutput(String new_archive, String folderpath){
         FileWriter write = null;
         File directory = null;
@@ -65,10 +75,16 @@ public abstract class FileHandler {
         writer = new PrintWriter(write);
     }
     /**
-     *Override this method for make thing at reading each line
+     *Override this method for make things at reading each line
      *@param currentLine is the current Line when {@link #read()} method is called.
      *@return void
      *@see {@link #read()}
      */
     abstract public void doPerReadedLine(String currentLine);
+    /**
+     *Override this method for make things when a file is fully readed
+     *@return void
+     *@see {@link #read()} 
+     */
+    abstract public void doAtReadFinish();
 }

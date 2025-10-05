@@ -49,7 +49,7 @@ public class TokenTable {
         tokenCategories.put(TokenType.ID, TokenCat.ID);
         //Build the tokenTable
         tokenTable = new EnumMap<TokenType,Regex>(TokenType.class);
-        tokenTable.put(TokenType.P_TYPE, new Regex("(?:nummy|numpt|charqa)"));
+        tokenTable.put(TokenType.P_TYPE, new Regex("(?:nummy|numpt|chara)"));
         tokenTable.put(TokenType.WHILE, new Regex("while"));
         tokenTable.put(TokenType.IF, new Regex("if"));
         tokenTable.put(TokenType.ELSE, new Regex("else"));
