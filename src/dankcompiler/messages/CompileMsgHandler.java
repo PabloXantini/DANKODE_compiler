@@ -1,6 +1,6 @@
 package dankcompiler.messages;
 
-import dankcompiler.errors.TokenError;
+import dankcompiler.parsing.errors.TokenError;
 
 public class CompileMsgHandler {
     private Language default_language = Language.ES;

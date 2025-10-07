@@ -1,4 +1,4 @@
-package dankcompiler.tokens;
+package dankcompiler.parsing.tokens;
 
 import java.util.EnumMap;
 

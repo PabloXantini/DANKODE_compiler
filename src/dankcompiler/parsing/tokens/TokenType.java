@@ -1,4 +1,4 @@
-package dankcompiler.tokens;
+package dankcompiler.parsing.tokens;
 
 public enum TokenType {
     P_TYPE,

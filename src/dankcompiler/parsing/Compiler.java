@@ -1,11 +1,12 @@
-package dankcompiler;
+package dankcompiler.parsing;
 
 import java.util.ArrayList;
 
-import dankcompiler.errors.TokenError;
+import dankcompiler.FileHandler;
 import dankcompiler.messages.CompileMsgHandler;
 import dankcompiler.messages.MessageType;
-import dankcompiler.tokens.Token;
+import dankcompiler.parsing.errors.TokenError;
+import dankcompiler.parsing.tokens.Token;
 
 public class Compiler extends FileHandler{
     private CompileMsgHandler MsgHandler;
@@ -19,7 +20,7 @@ public class Compiler extends FileHandler{
     }
     public static void main(String[] args) {
         Compiler dank = new Compiler("src/dankcompiler/HolaMundo.dank");
-        dank.focusFileOutput("lexout.dankc", "src/dankcompiler/temp");
+        dank.focusFileOutput("out.dankc", "src/dankcompiler/temp");
         dank.read();
         dank.showErrors();
     }

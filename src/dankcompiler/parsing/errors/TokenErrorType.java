@@ -1,4 +1,4 @@
-package dankcompiler.errors;
+package dankcompiler.parsing.errors;
 
 public enum TokenErrorType {
     LEXICAL,

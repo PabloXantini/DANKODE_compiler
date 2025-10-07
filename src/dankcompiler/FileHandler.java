@@ -19,7 +19,7 @@ public abstract class FileHandler {
     public FileHandler(String filepath){
         this.filepath = filepath;
     }
-    PrintWriter getWriter(){
+    protected PrintWriter getWriter(){
         return this.writer;
     }
     /**

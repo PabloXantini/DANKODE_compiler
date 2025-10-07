@@ -1,4 +1,4 @@
-package dankcompiler.tokens;
+package dankcompiler.parsing.tokens;
 
 public class Token {
     private final String symbol;

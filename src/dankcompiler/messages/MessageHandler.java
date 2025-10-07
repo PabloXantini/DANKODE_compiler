@@ -2,8 +2,8 @@ package dankcompiler.messages;
 
 import java.util.EnumMap;
 
-import dankcompiler.errors.TokenErrorCode;
-import dankcompiler.errors.TokenErrorType;
+import dankcompiler.parsing.errors.TokenErrorCode;
+import dankcompiler.parsing.errors.TokenErrorType;
 
 public class MessageHandler {
     private final Language lang;

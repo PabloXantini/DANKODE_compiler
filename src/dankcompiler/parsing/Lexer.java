@@ -1,16 +1,16 @@
-package dankcompiler;
+package dankcompiler.parsing;
 
 import java.util.ArrayList;
 import java.util.Set;
 
-import dankcompiler.errors.TokenError;
-import dankcompiler.errors.TokenErrorCode;
-import dankcompiler.errors.CompileErrorHandler;
-import dankcompiler.errors.TokenErrorType;
-import dankcompiler.tokens.Regex;
-import dankcompiler.tokens.Token;
-import dankcompiler.tokens.TokenTable;
-import dankcompiler.tokens.TokenType;
+import dankcompiler.parsing.errors.CompileErrorHandler;
+import dankcompiler.parsing.errors.TokenError;
+import dankcompiler.parsing.errors.TokenErrorCode;
+import dankcompiler.parsing.errors.TokenErrorType;
+import dankcompiler.parsing.tokens.Regex;
+import dankcompiler.parsing.tokens.Token;
+import dankcompiler.parsing.tokens.TokenTable;
+import dankcompiler.parsing.tokens.TokenType;
 
 public class Lexer{
     //Cursor
