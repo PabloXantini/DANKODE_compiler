@@ -21,3 +21,4 @@ while(papuvar_HP_1 > 0){
 };
 papuvar_cont_ = 0;
 papuvar_name_ = 0; 				//INCOMPATIBILIDAD ASIGNACIÓN CADENA B3
+/*Hola comosta no cerre el comentario

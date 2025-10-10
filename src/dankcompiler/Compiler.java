@@ -32,7 +32,7 @@ public class Compiler extends FileHandler{
         return true;
     }
     public void showErrors(){
-        if(thereErrors()){
+        if(!thereErrors()){
             System.out.println(MsgHandler.generateMessage(MessageType.ERRORS_NOT_FOUND_MESSAGE));
             return;
         }
@@ -60,7 +60,7 @@ public class Compiler extends FileHandler{
         for(Token token : tokens){
             this.getWriter().print(token.getSymbol());
             //TASK FOR PARSER
-            
+
         }
         if(tokens.size()>0){
             this.getWriter().println();
@@ -69,6 +69,10 @@ public class Compiler extends FileHandler{
     @Override
     public void doAtReadFinish() {
         Token EOF = lexer.generateEndToken();
+        ArrayList<TokenError> errors = lexer.getCurrentErrors();
+        for(TokenError error : errors){
+            ErrorTable.add(error);
+        }
         //TASK FOR PARSER
 
         this.getWriter().close();

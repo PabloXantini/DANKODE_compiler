@@ -52,8 +52,8 @@ public class Lexer{
         Token token = new Token(lexem, type, TokenReference.getCategorie(type), line, column);
         TokenStream.add(token);
     }
-    private void throwError(String lexem, int line, int column){
-        TokenError error = CompileErrorHandler.generateError(lexem, TokenErrorType.LEXICAL, line, column, TokenErrorCode.LEXEM_UNKNOWN);
+    private void throwError(String lexem, int line, int column, TokenErrorCode code){
+        TokenError error = CompileErrorHandler.generateError(lexem, TokenErrorType.LEXICAL, line, column, code);
         ErrorStream.add(error);
     }
     public Lexer() {
@@ -118,7 +118,7 @@ public class Lexer{
                 char unknown_lexem = currentLine.charAt(cursor);
                 String lexem = String.valueOf(unknown_lexem);
                 //Throw error
-                throwError(lexem, this.line, this.column);
+                throwError(lexem, this.line, this.column, TokenErrorCode.LEXEM_UNKNOWN);
                 column++;
                 cursor++;
             }      
@@ -129,7 +129,11 @@ public class Lexer{
     }
     public Token generateEndToken(){
         TokenStream.clear();
+        ErrorStream.clear();
         generateToken(null, TokenType.EOF, line, column);
+        if(!c_block_closed){
+            throwError("*/", c_block_lstart, c_block_cstart, TokenErrorCode.BLOCK_COMMENT_NOT_CLOSED);
+        }
         return TokenStream.get(0);
     }
 }

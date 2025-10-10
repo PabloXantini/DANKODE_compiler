@@ -43,5 +43,6 @@ public class MessageHandler {
         typeInfo.put(TokenErrorType.LEXICAL, "Análisis Léxico");
         //Messages
         errorMessages.put(TokenErrorCode.LEXEM_UNKNOWN, "Lexema desconocido: %s");
+        errorMessages.put(TokenErrorCode.BLOCK_COMMENT_NOT_CLOSED, "Se esperaba: %s");
     }
 }
