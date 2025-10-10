@@ -1,10 +1,10 @@
-package dankcompiler.parsing;
+package dankcompiler;
 
 import java.util.ArrayList;
 
-import dankcompiler.FileHandler;
 import dankcompiler.messages.CompileMsgHandler;
 import dankcompiler.messages.MessageType;
+import dankcompiler.parsing.Lexer;
 import dankcompiler.parsing.errors.TokenError;
 import dankcompiler.parsing.tokens.Token;
 
@@ -59,14 +59,18 @@ public class Compiler extends FileHandler{
         //TASK FOR PRINT OUTPUT ON LEXER
         for(Token token : tokens){
             this.getWriter().print(token.getSymbol());
+            //TASK FOR PARSER
+            
         }
         if(tokens.size()>0){
             this.getWriter().println();
         }
-        //TASK FOR PARSER
     }
     @Override
     public void doAtReadFinish() {
+        Token EOF = lexer.generateEndToken();
+        //TASK FOR PARSER
+
         this.getWriter().close();
     }
 }

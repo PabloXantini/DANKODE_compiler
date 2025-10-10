@@ -1,7 +1,9 @@
 package dankcompiler.parsing.tokens;
 
 public enum TokenType {
-    P_TYPE,
+    NUMMY,
+    NUMPT,
+    CHARA,
     WHILE,
     IF,
     ELSE,
@@ -29,5 +31,5 @@ public enum TokenType {
     CINT,
     CSTRING,
     ID,
-    UNDEFINED
+    EOF
 }

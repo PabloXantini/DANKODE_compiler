@@ -123,14 +123,13 @@ public class Lexer{
                 cursor++;
             }      
         }
-        /*
-        if(currentLine.length()>0){
-            //getWriter().println();
-            //getWriter().flush();
-        }
-        */
         //SOLO DEBUG
         System.out.print("\n");
         return TokenStream;
+    }
+    public Token generateEndToken(){
+        TokenStream.clear();
+        generateToken(null, TokenType.EOF, line, column);
+        return TokenStream.get(0);
     }
 }
