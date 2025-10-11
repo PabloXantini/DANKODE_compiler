@@ -91,9 +91,9 @@ public class Lexer{
                 checkMatch(INLINE_B_COMMENT, tmp, false);
                 continue;    
             }else if((tmp=B_COMMENT_START.match(currentLine, cursor))!=-1){
-                checkMatch(B_COMMENT_START, tmp, false);
                 c_block_lstart=line;
                 c_block_cstart=column;
+                checkMatch(B_COMMENT_START, tmp, false);
                 c_block_closed=false;
                 continue;
             }

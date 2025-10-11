@@ -38,6 +38,7 @@ public class TokenTable {
         tokenCategories.put(TokenType.CINT, TokenCat.LITERAL);
         tokenCategories.put(TokenType.CSTRING, TokenCat.LITERAL);
         tokenCategories.put(TokenType.ID, TokenCat.ID);
+        tokenCategories.put(TokenType.EOF, TokenCat.EOF);
         //Build the tokenTable
         tokenTable = new EnumMap<TokenType,Regex>(TokenType.class);
         tokenTable.put(TokenType.NUMMY, new Regex("nummy"));
