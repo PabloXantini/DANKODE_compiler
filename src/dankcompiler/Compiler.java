@@ -5,17 +5,20 @@ import java.util.ArrayList;
 import dankcompiler.messages.CompileMsgHandler;
 import dankcompiler.messages.MessageType;
 import dankcompiler.parsing.Lexer;
+import dankcompiler.parsing.Parser;
 import dankcompiler.parsing.errors.TokenError;
 import dankcompiler.parsing.tokens.Token;
 
 public class Compiler extends FileHandler{
     private CompileMsgHandler MsgHandler;
     private Lexer lexer;
+    private Parser parser;
     private final ArrayList<TokenError> ErrorTable;
     public Compiler(String filepath){
         super(filepath);
         MsgHandler = new CompileMsgHandler();
         lexer = new Lexer();
+        parser = new Parser();
         ErrorTable = new ArrayList<TokenError>();
     }
     public static void main(String[] args) {
@@ -60,7 +63,7 @@ public class Compiler extends FileHandler{
         for(Token token : tokens){
             this.getWriter().print(token.getSymbol());
             //TASK FOR PARSER
-
+            parser.consumeToken(token);
         }
         if(tokens.size()>0){
             this.getWriter().println();
@@ -74,7 +77,7 @@ public class Compiler extends FileHandler{
             ErrorTable.add(error);
         }
         //TASK FOR PARSER
-
+        parser.consumeToken(EOF);
         this.getWriter().close();
     }
 }

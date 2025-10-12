@@ -1,5 +1,5 @@
 nummy papuvar_cont_, papuvar#max#, papuvar_HP_1;
-numpt papuvar_pos_x_1, papuvar_posy1, papuvar_time_;
+numpt papuvar_pos_x_1, papuvar_posy_1, papuvar_time_;
 chara papuvar_name_, papuvar#max#, papuvar_time_; //2 DECLARACIONES DUPLICADAS E12
 papuvar_name_ = "Pablo Silson";
 papuvar_name_ = papuvar_name_ + 2;		//INCOMPATIBILIDAD ARITMÉTICA CADENA A1
@@ -21,4 +21,3 @@ while(papuvar_HP_1 > 0){
 };
 papuvar_cont_ = 0;
 papuvar_name_ = 0; 				//INCOMPATIBILIDAD ASIGNACIÓN CADENA B3
-/*Hola comosta no cerre el comentario

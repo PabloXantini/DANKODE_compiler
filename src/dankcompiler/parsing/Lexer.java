@@ -41,7 +41,7 @@ public class Lexer{
         cursor=next;
         column+=lexem.length();
         //DEBUG ONLY
-        System.out.print(lexem);
+        //System.out.print(lexem);
         if(write){
             //WRITE ON
             //this.getWriter().print(lexem);
@@ -77,10 +77,10 @@ public class Lexer{
             //If not comment block closed, skip line
             if((tmp=B_COMMENT_END.match(currentLine, cursor))!=-1){
                 c_block_closed=true;
-                System.out.println(B_COMMENT_END.getMatch());
+                //System.out.println(B_COMMENT_END.getMatch());
                 return TokenStream;
             }else if(!c_block_closed){
-                System.out.println(currentLine);
+                //System.out.println(currentLine);
                 return TokenStream;
             }
             //COMMENTS
@@ -124,7 +124,7 @@ public class Lexer{
             }      
         }
         //SOLO DEBUG
-        System.out.print("\n");
+        //System.out.print("\n");
         return TokenStream;
     }
     public Token generateEndToken(){

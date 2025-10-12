@@ -19,4 +19,7 @@ public class Token {
     public TokenType getType(){
         return type;
     }
+    public TokenCat getCategory(){
+        return cat;
+    }
 }
