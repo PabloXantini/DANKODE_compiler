@@ -5,7 +5,6 @@ import java.util.Stack;
 import dankcompiler.parsing.ast.AST;
 import dankcompiler.parsing.ast.Node;
 import dankcompiler.parsing.ast.GroupNode;
-import dankcompiler.parsing.ast.DefinedNode;
 import dankcompiler.parsing.tokens.Token;
 import dankcompiler.parsing.tokens.TokenCat;
 import dankcompiler.parsing.tokens.TokenType;
@@ -53,8 +52,7 @@ public class Parser {
     //Node Backup
     private Stack<ParseMode> context_stack;
     private Stack<Node> branch_stack;
-    private Node current_node;
-    private ParseMode current;
+    private ParseMode parse_state;
 
     public Parser(){
         //INSTANCING
@@ -65,10 +63,10 @@ public class Parser {
         //INITIALIZATION
         this.context_stack.push(ParseMode.PROGRAM);
         this.branch_stack.push(program);
-        this.current_node = program;
+        //this.current_node = program;
     }
     public void consumeToken(Token token){
-        parse(current, token);
+        parse(parse_state, token);
     }
     private void parse(ParseMode mode, Token token){
         mode = context_stack.peek();
@@ -139,6 +137,7 @@ public class Parser {
         //Statement -> Declaration | Assignment
         //Declaration -> [type] (OnDeclaration)
         TokenType type = token.getType();
+        GroupNode instructions = (GroupNode) this.getLastBranch();
         switch (type) {
             //STATEMENTS
             case NUMMY, NUMPT, CHARA:
@@ -147,20 +146,24 @@ public class Parser {
                 context_stack.push(ParseMode.STATEMENT);
                 context_stack.push(ParseMode.DECLARATION);
                 context_stack.push(ParseMode.ON_DECLARATION);
+                //Esto podria almacenarse solo en la tabla de simbolos
                 Declaration new_declaration = new Declaration();
-                //super_node.appendNode(new_declaration);
-                this.getLastBranch().appendNode(new_declaration);
-                this.current_node = new_declaration;
+                instructions.appendNode(new_declaration);
+                branch_stack.push(new_declaration);
+                //====================================================
+                //this.current_node = new_declaration;
                 break;
             case ID:
                 System.out.println("-- Assignment Looking For... --");
                 System.out.println("ID Detected");
                 context_stack.push(ParseMode.STATEMENT);
                 context_stack.push(ParseMode.ASSIGNMENT);
-                Assignment new_assignment = new Assignment();
-                this.getLastBranch().appendNode(new_assignment);
+                Variable new_variable = new Variable(token.getSymbol());
+                Assignment new_assignment = new Assignment(new_variable);
+                instructions.appendNode(new_assignment);
+                branch_stack.push(new_assignment);
                 this.previous_token = token;
-                this.current_node = new_assignment;
+                //this.current_node = new_assignment;
                 break;
             //WHILE
             case WHILE:
@@ -192,7 +195,6 @@ public class Parser {
             case ID:
                 System.out.println("ID Detected");
                 context_stack.push(ParseMode.DEFINITION);
-                current_node.setValue(token.getSymbol());
                 break;
             default:
                 break;
@@ -224,6 +226,7 @@ public class Parser {
         //Definition -> [ID] | Assignement
         //System.out.println("Closure Definition o more Looking For...");
         TokenType type = token.getType();
+        GroupNode instructions = null;
         switch (type) {
             case SEMICOLON:
                 System.out.println("; Declaration Finished Correctly --");
@@ -232,19 +235,21 @@ public class Parser {
             case COMMA:
                 System.out.println("COMMA Detected");
                 context_stack.pop();//quit DEFINITION
+                branch_stack.pop();//goto INSTRUCTIONS NODES
+                instructions = (GroupNode) this.getLastBranch();
                 Declaration new_declaration = new Declaration();
-                this.getLastBranch().appendNode(new_declaration);
-                this.current_node = new_declaration;
+                instructions.appendNode(new_declaration);
                 break;
             case ASSIGN:
                 context_stack.push(ParseMode.ASSIGNMENT);
                 context_stack.push(ParseMode.EXPR);
+                branch_stack.pop();//goto INSTRUCTIONS NODES
                 System.out.println("Expression Looking For...");
                 Assignment new_assignment = new Assignment();
                 new_assignment.setValue(this.previous_token.getSymbol());
-                this.getLastBranch().appendNode(new_assignment);
+                instructions = (GroupNode) this.getLastBranch();
+                instructions.appendNode(new_assignment);
                 this.branch_stack.push(new_assignment);
-                this.current_node = new_assignment;
                 break;
             default:
                 break;
@@ -265,7 +270,7 @@ public class Parser {
         switch (type) {
             case CINT, CFLOAT, CSTRING:
                 System.out.println("LITERAL Detected...");
-                Literal new_literal = new Literal(token.getSymbol());
+                Constant new_literal = new Constant(token.getSymbol());
                 branch_stack.push(new_literal);
                 break;
             case ID:
@@ -320,55 +325,71 @@ public class Parser {
     }
 }
 //STATEMENTS
-class Declaration extends DefinedNode{
-    public Declaration(){
-    }
-    @Override
-    public void appendNode(Node node, Node branch) {
-        throw new UnsupportedOperationException("Unimplemented method 'appendNode'");
-    }
-    @Override
-    public void appendNode(Node node) {
-        throw new UnsupportedOperationException("Unimplemented method 'appendNode'");
+class Declaration extends Node{
+    public Declaration() {
     }
 }
-class Assignment extends DefinedNode {
+class Assignment extends Node {
+    private Variable var;
     private Expression expr;
     public Assignment(){}
-    @Override
-    public void appendNode(Node node, Node branch) {
-        branch.appendNode(node);
+    public Assignment(Variable var){
+        this.var = var;
     }
-    @Override
-    public void appendNode(Node node) {
-        throw new UnsupportedOperationException("Unimplemented method 'appendNode'");
+    public Variable getVariable(){
+        return this.var;
+    }
+    public Expression getExpression(){
+        return this.expr;
+    }
+    public void setVariable(Variable var){
+        this.var = var;
+    }
+    public void setExpression(Expression expr){
+        this.expr = expr;
     }
 }
 //EXPRESSIONS
-abstract class Expression extends DefinedNode {
+class Expression extends Node {
     public Expression(){}
-    @Override
-    public void appendNode(Node node, Node branch) {
-        throw new UnsupportedOperationException("Unimplemented method 'appendNode'");
-    }
-    @Override
-    public void appendNode(Node node) {
-        throw new UnsupportedOperationException("Unimplemented method 'appendNode'");
-    }
 }
 class BinaryOp extends Expression {
     private final TokenType op;
-    private Expression left;
-    private Expression right;
+    private Expression left_term;
+    private Expression right_term;
     public BinaryOp(TokenType op){
         this.op = op;
     }
+    public TokenType getOp(){
+        return this.op;
+    }
+    public Expression getLeftTerm(){
+        return this.left_term;
+    }
+    public Expression getRightTerm(){
+        return this.right_term;
+    }
+    public void setLeftTerm(Expression left) {
+        this.left_term = left;
+    }
+    public void setRightTerm(Expression right) {
+        this.right_term = right;
+    }  
 }
 class UnaryOp extends Expression {
     private final TokenType op;
-    private Expression expr;
+    private Expression term;
     public UnaryOp(TokenType op){
         this.op = op;
+    }
+    public TokenType getOp(){
+        return this.op;
+    }
+    public Expression getTerm(){
+        return this.term;
+    }
+    public void setTerm(Expression term){
+        this.term = term;
     }
 }
 class Variable extends Expression {
@@ -377,10 +398,8 @@ class Variable extends Expression {
         this.value = value;
     }
 }
-class Literal extends Expression {
-    public Literal(String value){
+class Constant extends Expression {
+    public Constant(String value){
         this.value = value;
-        for(int i=0;i<200;i=i+5*i){
-        }
     }
 }

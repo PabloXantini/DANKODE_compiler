@@ -67,7 +67,9 @@ public class Compiler extends FileHandler{
         }
         if(tokens.size()>0){
             this.getWriter().println();
+            this.getWriter().flush();
         }
+        this.getWriter().flush();
     }
     @Override
     public void doAtReadFinish() {
