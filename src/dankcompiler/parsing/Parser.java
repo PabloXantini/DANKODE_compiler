@@ -163,7 +163,6 @@ public class Parser {
                 instructions.appendNode(new_assignment);
                 branch_stack.push(new_assignment);
                 this.previous_token = token;
-                //this.current_node = new_assignment;
                 break;
             //WHILE
             case WHILE:
@@ -231,6 +230,7 @@ public class Parser {
             case SEMICOLON:
                 System.out.println("; Declaration Finished Correctly --");
                 back(5); //quit until INSTRUCTIONS
+                branch_stack.pop();//goto INSTRUCTIONS NODES
                 break;
             case COMMA:
                 System.out.println("COMMA Detected");
@@ -239,6 +239,7 @@ public class Parser {
                 instructions = (GroupNode) this.getLastBranch();
                 Declaration new_declaration = new Declaration();
                 instructions.appendNode(new_declaration);
+                branch_stack.push(new_declaration);
                 break;
             case ASSIGN:
                 context_stack.push(ParseMode.ASSIGNMENT);
