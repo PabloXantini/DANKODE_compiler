@@ -52,6 +52,9 @@ public class Parser {
     //Node Backup
     private Stack<ParseMode> context_stack;
     private Stack<Node> branch_stack;
+    //Expression Backup
+    private Stack<Node> op_stack;
+    //Parsing State
     private ParseMode parse_state;
 
     public Parser(){
@@ -86,9 +89,17 @@ public class Parser {
             case ParseMode.EXPR:
                 parseExpression(token);
                 break;
+            /*
             case ParseMode.GROUP:
                 parseGroup(token);
-                break;      
+                break; 
+            case ParseMode.U_OP:
+                parseUnaryOp(token);
+                break;
+            case ParseMode.B_OP:
+                parseBinaryOp(token);
+                break;
+            */     
             default:
                 break;
         }
@@ -109,7 +120,6 @@ public class Parser {
     }
     /*
      * mode = PROGRAM
-     * the root must be Program
      */
     private void parseProgram(Token token){
         //Program -> (InstructionList) [EOF]
@@ -128,7 +138,6 @@ public class Parser {
     }
     /*
      * mode = PROGRAM
-     * SuperNode = Program(GroupNode)
      */
     private void parseInstruction(Token token){
         //InstructionList append a Instruction when asserts
@@ -178,7 +187,6 @@ public class Parser {
     }
     /*
      * mode = ON_DECLARATION
-     * superNode = Program(GroupNode)
      */
     private void parseDeclaration(Token token){
         //OnDeclaration-> (Definition) | (Definition)[,](OnDeclaration)
@@ -201,7 +209,6 @@ public class Parser {
     }
     /*
      * mode = ASSIGNEMENT
-     * superNode = Program(GroupNode)
      */
     private void parseAssignment(Token token){
         TokenType type = token.getType();
@@ -219,7 +226,6 @@ public class Parser {
     }
     /*
      * mode = DEFINITION
-     * superNode = Program(GroupNode)
      */
     private void parseDefinition(Token token){
         //Definition -> [ID] | Assignement
@@ -258,7 +264,6 @@ public class Parser {
     }
     /*
      * mode = EXPR
-     * superNode = Assignement(GroupNode)
      */
     private void parseExpression(Token token){
         //Expr -> Term | (Term) (BOP) (Expr)
@@ -296,6 +301,7 @@ public class Parser {
                 break;
             default:
                 context_stack.push(ParseMode.B_OP);
+                parseBinaryOp(token);
                 break;
         }
     }
@@ -313,16 +319,39 @@ public class Parser {
     }
     private void parseUnaryOp(Token token){
         TokenType type = token.getType();
+        UnaryOp stored_op = null;
         switch (type) {
             case PLUS, MINUS:
+                System.out.println("Unary OP: "+type);
                 context_stack.pop();
                 UnaryOp new_unop = new UnaryOp(type);
                 branch_stack.push(new_unop);
+                break;
+            case ID:
+                System.out.println("ID Detected...");
+                context_stack.pop();
+                stored_op = (UnaryOp)branch_stack.pop();
+                Variable new_var = new Variable(token.getSymbol());
+                stored_op.setTerm(new_var);
+                break;
+            case CINT, CFLOAT, CSTRING:
+                System.out.println("LITERAL Detected...");
+                context_stack.pop();
+                stored_op = (UnaryOp)branch_stack.pop();
+                Constant new_const = new Constant(token.getSymbol());
+                stored_op.setTerm(new_const);
+                break;
+            case LP:
+                System.out.println("( Detected...");
+                context_stack.push(ParseMode.GROUP);
                 break;
             default:
                 System.out.println("The unary operator is not valid");
                 break;
             }
+    }
+    private void parseBinaryOp(Token token){
+        TokenType type = token.getType();
     }
 }
 //STATEMENTS
