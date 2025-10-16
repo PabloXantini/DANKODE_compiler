@@ -21,26 +21,22 @@ enum ParseMode{
     //DECLARATION STUFF
     ON_DECLARATION,
     DEFINITION,
-    ASSIGN_DEFINITION,
+    DECL_EXPR,
     //ASSIGNMENT STUFF
-    ASSIGNMENT,
     ON_ASSIGNMENT,
-    //While
-    WHILE,
-    //Expresions
+    ASSIGN_EXPR,
+    ASSIGN_END,
+    //WHILE STUFF
+    ON_WHILE,
+    //EXPRESSIONS
     EXPR,
-    TERM,
-    B_OP,
+    EXPR_END,
     //Term Especification
+    TERM,
+    //Group Expecification
     GROUP,
-    UEXPR,
-    LITERAL,
-    //Binary Operators
-    BOOL, //Boolean
-    R_OP, //Relational
-    A_OP,  //Arithmetic
-    //Atomic Terms
-    U_OP,
+    G_BODY,
+    G_END,
 }
 
 
@@ -54,7 +50,7 @@ public class Parser {
     private Stack<ParseMode> context_stack;
     private Stack<Node> branch_stack;
     //Expression Backup
-    private Stack<Node> op_stack;
+    private int precedence_level = 0;
 
     public Parser(){
         //INSTANCING
@@ -84,9 +80,21 @@ public class Parser {
             case ParseMode.ON_ASSIGNMENT:
                 parseAssignment(token);
                 break;
+            case ParseMode.ASSIGN_END:
+                parseAssignEnd(token);
+                break;
             case ParseMode.DEFINITION:
                 parseDefinition(token);                
-                break;     
+                break;
+            case ParseMode.EXPR:
+                parseExpression(token);
+                break;
+            case ParseMode.EXPR_END:
+                parseExpressionEnd(token);
+                break; 
+            case ParseMode.TERM:
+                parseTerm(token);
+                break;
             default:
                 break;
         }
@@ -177,6 +185,7 @@ public class Parser {
                 System.out.println("\t\t\tID peeked");
                 System.out.println("\t\t\t= Detected");
                 context_stack.push(ParseMode.EXPR);
+                this.previous_token = token;
                 break;
             default:
                 break;
@@ -188,10 +197,116 @@ public class Parser {
         switch (type) {
             case ASSIGN:
                 System.out.println("\t\t\t= Detected");
+                context_stack.push(ParseMode.ASSIGN_END);
                 context_stack.push(ParseMode.EXPR);
+                this.previous_token = token;
                 break;
             default:
                 break;
+        }
+    }
+    private void parseAssignEnd(Token token){
+        TokenType type = token.getType();
+        if(type==TokenType.SEMICOLON){
+            System.out.println("\t\t\t; Detected");
+            backUntil(ParseMode.INSTRUCTION);;
+        }
+    }
+    private void parseExpression(Token token){
+        //TokenType type = token.getType();
+        if(this.precedence_level==0){
+            parseMinorExpression(token);
+        }else{
+            this.precedence_level--;           
+        }
+    }
+    private void parseExpressionEnd(Token token){
+        TokenType type = token.getType();
+        TokenCat cat = token.getCategory();
+        int precedence = getPrecedence(type);
+        if(this.precedence_level==precedence && cat==TokenCat.OPERATOR){
+            context_stack.pop();//goto EXPR
+            this.precedence_level++;
+            System.out.println("\t\t\t"+type+" Detected");
+        }else if(this.precedence_level==0){
+            //DO THIS WHEN PRECEDENCE IS 0
+            context_stack.pop();//goto EXPR
+            context_stack.pop();//exit EXPR
+            parse(token);
+        }else{
+            //DO THIS WHEN PRECEDENCE IS NOT 0
+            context_stack.pop();
+            parse(token);
+        }
+    }
+    private void parseMinorExpression(Token token){
+        TokenType type = token.getType();
+        if(isUnary(token)){
+            System.out.println("\t\t\tUNARY Detected");
+            context_stack.push(ParseMode.TERM);
+        }
+        switch (type) {
+            case LP:
+                System.out.println("\t\t\t( Detected");
+                context_stack.push(ParseMode.EXPR_END);
+                break;
+            case ID:
+                System.out.println("\t\t\tID Detected");
+                context_stack.push(ParseMode.EXPR_END);
+                break;
+            case CINT, CFLOAT, CSTRING:
+                System.out.println("\t\t\tConstant Detected");
+                context_stack.push(ParseMode.EXPR_END);
+            default:
+                break;
+        }
+    }
+    private void parseTerm(Token token){
+        TokenType type = token.getType();
+        switch (type) {
+            case LP:
+                System.out.println("\t\t\t( Detected");
+                context_stack.push(ParseMode.EXPR_END);
+                break;
+            case ID:
+                System.out.println("\t\t\tID Detected");
+                context_stack.push(ParseMode.EXPR_END);
+                break;
+            case CINT, CFLOAT, CSTRING:
+                System.out.println("\t\t\tConstant Detected");
+                context_stack.push(ParseMode.EXPR_END);
+            default:
+                break;
+        }
+    }
+    private boolean isUnary(Token token){
+        TokenCat ecat = previous_token.getCategory();
+        TokenCat cat = token.getCategory();
+        TokenType type = token.getType();
+        if(cat!=TokenCat.OPERATOR){
+            return false; 
+        }
+        switch (type) {
+            case PLUS, MINUS:
+                break;
+            default:
+                System.out.println("Unary not valid");
+                return false;
+        }
+        switch (ecat) {
+            case OPERATOR, DELIMITER: return true;
+            default: return false;
+        }
+    }
+    private int getPrecedence(TokenType type){
+        switch (type) {
+            case OR: return 6;
+            case AND: return 5;
+            case EQUAL, NONEQUAL: return 4;
+            case GTE, LTE, GT, LT: return 3;
+            case PLUS, MINUS: return 2;
+            case MUL, DIV, MOD: return 1;        
+            default: return 0;//UNARIO-TERM
         }
     }
     /*
