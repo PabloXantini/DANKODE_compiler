@@ -15,21 +15,22 @@ import dankcompiler.parsing.tokens.TokenType;
  */
 enum ParseMode{
     PROGRAM,
-    //Instruction Block
-    INSTRUCTIONS,
+    //BLOCK STUFF
+    INSTRUCTION,
     BODY,
-    //Instruction Types
-    STATEMENT,
-    DECLARATION,
-    ASSIGNMENT,
-    WHILE,
-    //Declaration Specification
+    //DECLARATION STUFF
     ON_DECLARATION,
     DEFINITION,
+    ASSIGN_DEFINITION,
+    //ASSIGNMENT STUFF
+    ASSIGNMENT,
+    ON_ASSIGNMENT,
+    //While
+    WHILE,
     //Expresions
+    EXPR,
     TERM,
     B_OP,
-    EXPR,
     //Term Especification
     GROUP,
     UEXPR,
@@ -54,8 +55,6 @@ public class Parser {
     private Stack<Node> branch_stack;
     //Expression Backup
     private Stack<Node> op_stack;
-    //Parsing State
-    private ParseMode parse_state;
 
     public Parser(){
         //INSTANCING
@@ -66,40 +65,28 @@ public class Parser {
         //INITIALIZATION
         this.context_stack.push(ParseMode.PROGRAM);
         this.branch_stack.push(program);
-        //this.current_node = program;
     }
     public void consumeToken(Token token){
-        parse(parse_state, token);
+        parse(token);
     }
-    private void parse(ParseMode mode, Token token){
-        mode = context_stack.peek();
+    private void parse(Token token){
+        ParseMode mode = context_stack.peek();
         switch (mode) {
             case ParseMode.PROGRAM:
                 parseProgram(token);
                 break;
+            case ParseMode.INSTRUCTION:
+                parseInstructions(token);
+                break;
             case ParseMode.ON_DECLARATION:
                 parseDeclaration(token);
                 break;
-            case ParseMode.DEFINITION:
-                parseDefinition(token);
-                break;
-            case ParseMode.ASSIGNMENT:
+            case ParseMode.ON_ASSIGNMENT:
                 parseAssignment(token);
-                break;  
-            case ParseMode.EXPR:
-                parseExpression(token);
                 break;
-            /*
-            case ParseMode.GROUP:
-                parseGroup(token);
-                break; 
-            case ParseMode.U_OP:
-                parseUnaryOp(token);
-                break;
-            case ParseMode.B_OP:
-                parseBinaryOp(token);
-                break;
-            */     
+            case ParseMode.DEFINITION:
+                parseDefinition(token);                
+                break;     
             default:
                 break;
         }
@@ -118,11 +105,11 @@ public class Parser {
             context_stack.pop();
         }
     }
-    /*
+    /* 
      * mode = PROGRAM
      */
     private void parseProgram(Token token){
-        //Program -> (InstructionList) [EOF]
+        //Program -> [EOF] | (InstructionList)
         TokenType type = token.getType();
         switch (type) {
             case EOF:
@@ -130,15 +117,84 @@ public class Parser {
                 break;
             default:
                 //if not EOF try parsing the instructions
-                System.out.println("Instruction Looking For...");
-                context_stack.push(ParseMode.INSTRUCTIONS);
-                parseInstruction(token);
+                System.out.println("Program Inited");
+                context_stack.push(ParseMode.INSTRUCTION);
+                parse(token);
                 break;
         }
     }
     /*
      * mode = PROGRAM
      */
+    private void parseInstructions(Token token){
+        //InstructionList -> () | (INSTRUCTION)(InstructionList)
+        //INSTRUCTION -> [TYPE](ON_DECLARATION) | [ID](ON_ASSIGNMENT) | [IF](ON_IF) | [WHILE](ON_WHILE) | [DOWHILE](ON_DOWHILE) | FOR(ON_FOR)
+        TokenType type = token.getType();
+        System.out.println("\tInstruction Detected");
+        switch (type){
+            case NUMMY, NUMPT, CHARA:
+                System.out.println("\t\tStatement Detected");
+                System.out.println("\t\tDeclaration Start");
+                context_stack.push(ParseMode.ON_DECLARATION);
+                break;
+            case ID:
+                System.out.println("\t\tStatement Detected");
+                System.out.println("\t\tAssignement Start");
+                System.out.println("\t\t\tID Detected");
+                context_stack.push(ParseMode.ON_ASSIGNMENT);
+            default:
+                break;
+        }
+    }
+    private void parseDeclaration(Token token){
+        //[ID](DEFINITION)
+        TokenType type = token.getType();
+        switch (type) {
+            case ID:
+                System.out.println("\t\tDeclaration Detected");
+                System.out.println("\t\t\tID Detected");
+                context_stack.push(ParseMode.DEFINITION);
+                previous_token = token;
+                break;
+            default:
+                break;
+        }
+    }
+    private void parseDefinition(Token token){
+        //DEFINITION -> [;] | [,](ON_DECLARATION) | [=](EXPR)
+        TokenType type = token.getType();
+        switch (type) {
+            case SEMICOLON:
+                System.out.println("\t\t\t; Detected");
+                backUntil(ParseMode.INSTRUCTION);
+                break;
+            case COMMA:
+                System.out.println("\t\t\t, Detected");
+                context_stack.pop();//Goto to ON_DECLARATION
+                break;
+            case ASSIGN:
+                System.out.println("\t\tAssignment Detected");
+                System.out.println("\t\t\tID peeked");
+                System.out.println("\t\t\t= Detected");
+                context_stack.push(ParseMode.EXPR);
+                break;
+            default:
+                break;
+        }
+    }
+    private void parseAssignment(Token token){
+        //ON_ASSIGNMENT	-> [=](EXPR)
+        TokenType type = token.getType();
+        switch (type) {
+            case ASSIGN:
+                System.out.println("\t\t\t= Detected");
+                context_stack.push(ParseMode.EXPR);
+                break;
+            default:
+                break;
+        }
+    }
+    /*
     private void parseInstruction(Token token){
         //InstructionList append a Instruction when asserts
         //InstructionList -> () | (Instruction) (InstructionList)
@@ -187,7 +243,7 @@ public class Parser {
     }
     /*
      * mode = ON_DECLARATION
-     */
+     *
     private void parseDeclaration(Token token){
         //OnDeclaration-> (Definition) | (Definition)[,](OnDeclaration)
         //Definition-> [ID] | Assignement
@@ -209,7 +265,7 @@ public class Parser {
     }
     /*
      * mode = ASSIGNEMENT
-     */
+     *
     private void parseAssignment(Token token){
         TokenType type = token.getType();
         //Assignement -> [ID][=](Expr)
@@ -226,7 +282,7 @@ public class Parser {
     }
     /*
      * mode = DEFINITION
-     */
+     *
     private void parseDefinition(Token token){
         //Definition -> [ID] | Assignement
         //System.out.println("Closure Definition o more Looking For...");
@@ -235,7 +291,7 @@ public class Parser {
         switch (type) {
             case SEMICOLON:
                 System.out.println("; Declaration Finished Correctly --");
-                back(5); //quit until INSTRUCTIONS
+                backUntil(ParseMode.INSTRUCTIONS); //quit until INSTRUCTIONS
                 branch_stack.pop();//goto INSTRUCTIONS NODES
                 break;
             case COMMA:
@@ -264,7 +320,7 @@ public class Parser {
     }
     /*
      * mode = EXPR
-     */
+     *
     private void parseExpression(Token token){
         //Expr -> Term | (Term) (BOP) (Expr)
         TokenCat category = token.getCategory();
@@ -353,6 +409,7 @@ public class Parser {
     private void parseBinaryOp(Token token){
         TokenType type = token.getType();
     }
+    */
 }
 //STATEMENTS
 class Declaration extends Node{
