@@ -62,6 +62,9 @@ public class Parser {
         this.context_stack.push(ParseMode.PROGRAM);
         this.branch_stack.push(program);
     }
+    public AST getAST(){
+        return this.ast;
+    }
     public void consumeToken(Token token){
         parse(token);
     }
@@ -148,8 +151,9 @@ public class Parser {
             case ID:
                 System.out.println("\t\tStatement Detected");
                 System.out.println("\t\tAssignement Start");
-                System.out.println("\t\t\tID Detected");
+                System.out.println("\t\t\tID("+token.getSymbol()+") Detected");
                 context_stack.push(ParseMode.ON_ASSIGNMENT);
+                break;
             default:
                 break;
         }
@@ -212,53 +216,37 @@ public class Parser {
             backUntil(ParseMode.INSTRUCTION);;
         }
     }
+    //Lvl 0 => OR
     private void parseExpression(Token token){
-        //TokenType type = token.getType();
-        if(this.precedence_level==0){
-            parseMinorExpression(token);
-        }else{
-            this.precedence_level--;           
-        }
+        this.precedence_level = 6;
+        parseLvl1(token);
     }
     private void parseExpressionEnd(Token token){
-        TokenType type = token.getType();
-        TokenCat cat = token.getCategory();
-        int precedence = getPrecedence(type);
-        if(this.precedence_level==precedence && cat==TokenCat.OPERATOR){
-            context_stack.pop();//goto EXPR
-            this.precedence_level++;
-            System.out.println("\t\t\t"+type+" Detected");
-        }else if(this.precedence_level==0){
-            //DO THIS WHEN PRECEDENCE IS 0
-            context_stack.pop();//goto EXPR
-            context_stack.pop();//exit EXPR
-            parse(token);
-        }else{
-            //DO THIS WHEN PRECEDENCE IS NOT 0
-            context_stack.pop();
-            parse(token);
+        switch (this.precedence_level) {
+            case 6:
+                if(isPrecedence(token)){
+                    System.out.println("\t\t\t"+token.getType()+" Detected");
+                    context_stack.pop();//goto EXPR
+                }else{
+                    context_stack.pop();//goto EXPR
+                    context_stack.pop();//exit of EXPR
+                    parse(token);
+                }
+                break;
+            case 5, 4, 3, 2, 1, 0:
+                parseLvlEnd(token);
+                break;
+            default:
+                break;
         }
     }
     private void parseMinorExpression(Token token){
-        TokenType type = token.getType();
+        this.precedence_level--;//0
         if(isUnary(token)){
-            System.out.println("\t\t\tUNARY Detected");
+            System.out.println("\t\t\tUNARY DETECTED");
             context_stack.push(ParseMode.TERM);
-        }
-        switch (type) {
-            case LP:
-                System.out.println("\t\t\t( Detected");
-                context_stack.push(ParseMode.EXPR_END);
-                break;
-            case ID:
-                System.out.println("\t\t\tID Detected");
-                context_stack.push(ParseMode.EXPR_END);
-                break;
-            case CINT, CFLOAT, CSTRING:
-                System.out.println("\t\t\tConstant Detected");
-                context_stack.push(ParseMode.EXPR_END);
-            default:
-                break;
+        }else{
+            parseTerm(token);
         }
     }
     private void parseTerm(Token token){
@@ -267,36 +255,85 @@ public class Parser {
             case LP:
                 System.out.println("\t\t\t( Detected");
                 context_stack.push(ParseMode.EXPR_END);
+                this.precedence_level++;//1
                 break;
             case ID:
-                System.out.println("\t\t\tID Detected");
+                System.out.println("\t\t\tID("+token.getSymbol()+") Detected");
+                backUntil(ParseMode.EXPR);
                 context_stack.push(ParseMode.EXPR_END);
+                this.precedence_level++;//1
                 break;
             case CINT, CFLOAT, CSTRING:
-                System.out.println("\t\t\tConstant Detected");
+                System.out.println("\t\t\tConstant("+token.getSymbol()+") Detected");
+                backUntil(ParseMode.EXPR);
                 context_stack.push(ParseMode.EXPR_END);
+                this.precedence_level++;//1
+                break;
             default:
+                System.out.println("Error: Expression expected");
                 break;
         }
+    }
+    //Lvl 1 => AND
+    private void parseLvl1(Token token){
+        this.precedence_level--;//5
+        parseLvl2(token);
+    }
+    private void parseLvlEnd(Token token){
+        if(isPrecedence(token)){
+            System.out.println("\t\t\t"+token.getType()+"("+token.getSymbol()+") Detected");
+            context_stack.pop();//goto EXPR
+        }else{
+            this.precedence_level++;
+            parse(token);
+        }
+    }
+    //Lvl 2 => EQUAL | NON EQUAL
+    private void parseLvl2(Token token){
+        this.precedence_level--;//4
+        parseLvl3(token);
+    }
+    //Lvl 3 => GTE | LTE | GT | LT
+    private void parseLvl3(Token token){
+        this.precedence_level--;//3
+        parseLvl4(token);
+    }
+    //Lvl 4 => PLUS | MINUS
+    private void parseLvl4(Token token){
+        this.precedence_level--;//2
+        parseLvl5(token);
+    }
+    //Lvl 5 => MUL | DIV |MOD
+    private void parseLvl5(Token token){
+        this.precedence_level--;//1
+        parseMinorExpression(token);
     }
     private boolean isUnary(Token token){
         TokenCat ecat = previous_token.getCategory();
         TokenCat cat = token.getCategory();
         TokenType type = token.getType();
-        if(cat!=TokenCat.OPERATOR){
-            return false; 
-        }
+        if(cat!=TokenCat.OPERATOR) return false;
         switch (type) {
             case PLUS, MINUS:
                 break;
             default:
-                System.out.println("Unary not valid");
+                System.out.println("\t\t\tUnary not valid");
                 return false;
         }
         switch (ecat) {
             case OPERATOR, DELIMITER: return true;
             default: return false;
         }
+    }
+    private boolean isPrecedence(Token token){
+        TokenType type = token.getType();
+        TokenCat cat = token.getCategory();
+        int token_precedence = getPrecedence(type);
+        if(cat!=TokenCat.OPERATOR) return false;
+        if(token_precedence==this.precedence_level){
+            return true;
+        }
+        return false;
     }
     private int getPrecedence(TokenType type){
         switch (type) {
@@ -309,222 +346,6 @@ public class Parser {
             default: return 0;//UNARIO-TERM
         }
     }
-    /*
-    private void parseInstruction(Token token){
-        //InstructionList append a Instruction when asserts
-        //InstructionList -> () | (Instruction) (InstructionList)
-        //Instruction -> (Statement)[;] | WHILE
-        //Statement -> Declaration | Assignment
-        //Declaration -> [type] (OnDeclaration)
-        TokenType type = token.getType();
-        GroupNode instructions = (GroupNode) this.getLastBranch();
-        switch (type) {
-            //STATEMENTS
-            case NUMMY, NUMPT, CHARA:
-                System.out.println("-- Declaration Looking For... --");
-                System.out.println("TYPE_KEYWORD Detected");
-                context_stack.push(ParseMode.STATEMENT);
-                context_stack.push(ParseMode.DECLARATION);
-                context_stack.push(ParseMode.ON_DECLARATION);
-                //Esto podria almacenarse solo en la tabla de simbolos
-                Declaration new_declaration = new Declaration();
-                instructions.appendNode(new_declaration);
-                branch_stack.push(new_declaration);
-                //====================================================
-                //this.current_node = new_declaration;
-                break;
-            case ID:
-                System.out.println("-- Assignment Looking For... --");
-                System.out.println("ID Detected");
-                context_stack.push(ParseMode.STATEMENT);
-                context_stack.push(ParseMode.ASSIGNMENT);
-                Variable new_variable = new Variable(token.getSymbol());
-                Assignment new_assignment = new Assignment(new_variable);
-                instructions.appendNode(new_assignment);
-                branch_stack.push(new_assignment);
-                this.previous_token = token;
-                break;
-            //WHILE
-            case WHILE:
-                System.out.println("-- While Looking For... --");
-                context_stack.push(ParseMode.WHILE);
-                break;
-            case EOF:
-                System.out.println("End of main instruction block");
-                break;
-            default:
-                break;
-        }
-    }
-    /*
-     * mode = ON_DECLARATION
-     *
-    private void parseDeclaration(Token token){
-        //OnDeclaration-> (Definition) | (Definition)[,](OnDeclaration)
-        //Definition-> [ID] | Assignement
-        //System.out.println("Definition Looking For...");
-        TokenType type = token.getType(); 
-        if(token.getCategory()==TokenCat.RESERVED){
-            //PUT ERROR HERE
-            System.out.println("ID must not be reserved keyword");
-            return;
-        }
-        switch (type) {
-            case ID:
-                System.out.println("ID Detected");
-                context_stack.push(ParseMode.DEFINITION);
-                break;
-            default:
-                break;
-        }
-    }
-    /*
-     * mode = ASSIGNEMENT
-     *
-    private void parseAssignment(Token token){
-        TokenType type = token.getType();
-        //Assignement -> [ID][=](Expr)
-        switch(type){
-            case ASSIGN:
-                System.out.println("= Detected");
-                System.out.println("Expression Looking For...");
-                context_stack.push(ParseMode.EXPR);
-                this.previous_token = token;
-                break;
-            default:
-                break;
-        }
-    }
-    /*
-     * mode = DEFINITION
-     *
-    private void parseDefinition(Token token){
-        //Definition -> [ID] | Assignement
-        //System.out.println("Closure Definition o more Looking For...");
-        TokenType type = token.getType();
-        GroupNode instructions = null;
-        switch (type) {
-            case SEMICOLON:
-                System.out.println("; Declaration Finished Correctly --");
-                backUntil(ParseMode.INSTRUCTIONS); //quit until INSTRUCTIONS
-                branch_stack.pop();//goto INSTRUCTIONS NODES
-                break;
-            case COMMA:
-                System.out.println("COMMA Detected");
-                context_stack.pop();//quit DEFINITION
-                branch_stack.pop();//goto INSTRUCTIONS NODES
-                instructions = (GroupNode) this.getLastBranch();
-                Declaration new_declaration = new Declaration();
-                instructions.appendNode(new_declaration);
-                branch_stack.push(new_declaration);
-                break;
-            case ASSIGN:
-                context_stack.push(ParseMode.ASSIGNMENT);
-                context_stack.push(ParseMode.EXPR);
-                branch_stack.pop();//goto INSTRUCTIONS NODES
-                System.out.println("Expression Looking For...");
-                Assignment new_assignment = new Assignment();
-                new_assignment.setValue(this.previous_token.getSymbol());
-                instructions = (GroupNode) this.getLastBranch();
-                instructions.appendNode(new_assignment);
-                this.branch_stack.push(new_assignment);
-                break;
-            default:
-                break;
-        }
-    }
-    /*
-     * mode = EXPR
-     *
-    private void parseExpression(Token token){
-        //Expr -> Term | (Term) (BOP) (Expr)
-        TokenCat category = token.getCategory();
-        TokenType type = token.getType();
-        if(category==TokenCat.OPERATOR){
-            resolveOp(token);        
-        }
-        //This register all posible operand
-        switch (type) {
-            case CINT, CFLOAT, CSTRING:
-                System.out.println("LITERAL Detected...");
-                Constant new_literal = new Constant(token.getSymbol());
-                branch_stack.push(new_literal);
-                break;
-            case ID:
-                System.out.println("ID Detected...");
-                Variable new_var = new Variable(token.getSymbol());
-                branch_stack.push(new_var);
-                break;
-            case LP:
-                System.out.println("( Detected...");
-                context_stack.push(ParseMode.GROUP);
-                break;
-            default:
-                break;
-        }
-    }
-    private void resolveOp(Token token){
-        TokenCat cat = previous_token.getCategory();
-        switch (cat) {
-            case OPERATOR, DELIMITER:
-                context_stack.push(ParseMode.U_OP);
-                parseUnaryOp(token);
-                break;
-            default:
-                context_stack.push(ParseMode.B_OP);
-                parseBinaryOp(token);
-                break;
-        }
-    }
-    private void parseGroup(Token token){
-        TokenType type = token.getType();
-        switch (type) {
-            case RP:
-                System.out.println(") Expression Block Finished correctly --");
-                context_stack.pop();
-                break;
-            default:
-                parseExpression(token);
-                break;
-        }
-    }
-    private void parseUnaryOp(Token token){
-        TokenType type = token.getType();
-        UnaryOp stored_op = null;
-        switch (type) {
-            case PLUS, MINUS:
-                System.out.println("Unary OP: "+type);
-                context_stack.pop();
-                UnaryOp new_unop = new UnaryOp(type);
-                branch_stack.push(new_unop);
-                break;
-            case ID:
-                System.out.println("ID Detected...");
-                context_stack.pop();
-                stored_op = (UnaryOp)branch_stack.pop();
-                Variable new_var = new Variable(token.getSymbol());
-                stored_op.setTerm(new_var);
-                break;
-            case CINT, CFLOAT, CSTRING:
-                System.out.println("LITERAL Detected...");
-                context_stack.pop();
-                stored_op = (UnaryOp)branch_stack.pop();
-                Constant new_const = new Constant(token.getSymbol());
-                stored_op.setTerm(new_const);
-                break;
-            case LP:
-                System.out.println("( Detected...");
-                context_stack.push(ParseMode.GROUP);
-                break;
-            default:
-                System.out.println("The unary operator is not valid");
-                break;
-            }
-    }
-    private void parseBinaryOp(Token token){
-        TokenType type = token.getType();
-    }
-    */
 }
 //STATEMENTS
 class Declaration extends Node{
