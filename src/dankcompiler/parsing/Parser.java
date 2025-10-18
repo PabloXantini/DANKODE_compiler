@@ -30,11 +30,8 @@ enum ParseMode{
     ON_WHILE,
     //EXPRESSIONS
     EXPR,
-    EXPR_END,
     //Term Especification
     TERM,
-    //Group Expecification
-    G_END
 }
 
 
@@ -48,8 +45,10 @@ public class Parser {
     private Stack<ParseMode> context_stack;
     private Stack<Node> branch_stack;
     //Expression Backup
-    private static final int MAX_PRECEDENCE = 7;
-    private int precedence_level = MAX_PRECEDENCE;
+    private int exp_pointer = 0;
+    private Stack<Token> expression_stack;
+    //private static final int MAX_PRECEDENCE = 7;
+    //private int precedence_level = MAX_PRECEDENCE;
 
     public Parser(){
         //INSTANCING
@@ -57,6 +56,7 @@ public class Parser {
         this.ast = new AST(program);
         this.context_stack = new Stack<ParseMode>();
         this.branch_stack = new Stack<Node>();
+        this.expression_stack = new Stack<Token>();
         //INITIALIZATION
         this.context_stack.push(ParseMode.PROGRAM);
         this.branch_stack.push(program);
@@ -88,17 +88,8 @@ public class Parser {
             case ParseMode.DEFINITION:
                 parseDefinition(token);                
                 break;
-            case ParseMode.G_END:
-                parseGroupEnd(token);            
-                break;
             case ParseMode.EXPR:
                 parseExpression(token);
-                break;
-            case ParseMode.EXPR_END:
-                parseExpressionEnd(token);
-                break; 
-            case ParseMode.TERM:
-                parseTerm(token);
                 break;
             default:
                 break;
@@ -218,201 +209,134 @@ public class Parser {
             backUntil(ParseMode.INSTRUCTION);;
         }
     }
-    private void parseGroupEnd(Token token){
-        TokenType type = token.getType();
-        if(type==TokenType.RP){
-            System.out.println("\t\t\t) Detected");
-            context_stack.pop();//goto upper context
-        }
-    }
-    //EXPR -> (EX1)(EXPR_END)
-    //Lvl 0 => OR
     private void parseExpression(Token token){
-        this.precedence_level = 6;
-        resolvePrecedence(token);
-        //parseLvl1(token);
-    }
-    //EXPR_END -> () | [||](EX1)
-    private void parseExpressionEnd(Token token){
-        //*
-        if(isPrecedence(token)){
-            System.out.println("\t\t\t"+token.getType()+" Detected");
-            context_stack.pop();//goto EXPR (Local Reduction)
-        }else{
-            context_stack.pop();//goto EXPR
-            context_stack.pop();//exit of EXPR
-            parse(token); //(Continue parsing)
-        }
-        //*/
-        /*
-        switch (this.precedence_level) {
-            case 6:
-                if(isPrecedence(token)){
-                    System.out.println("\t\t\t"+token.getType()+" Detected");
-                    context_stack.pop();//goto EXPR
-                }else{
-                    context_stack.pop();//goto EXPR
-                    context_stack.pop();//exit of EXPR
-                    parse(token);
-                }
-                break;
-            case 5, 4, 3, 2, 1, 0:
-                parseLvlEnd(token);
-                break;
+        TokenCat cat = token.getCategory();
+        TokenType type = token.getType();
+        switch (cat) {
+            case OPERATOR, LITERAL, ID:
+                System.out.println("\t\t\t"+token.getCategory()+"("+token.getSymbol()+") Detected");
+                expression_stack.push(token);
+                return;
             default:
                 break;
         }
-        */
-    }
-    private void parseMinorExpression(Token token){
-        //this.precedence_level--;//0
-        //EX6 -> (TERM) | (U_OP)(TERM)
-        if(isUnary(token)){
-            System.out.println("\t\t\tUNARY DETECTED");
-            context_stack.push(ParseMode.TERM);
-        }else{
-            parseTerm(token);
-        }
-    }
-    //TERM -> GROUP | [ID] | CONSTANT
-    private void parseTerm(Token token){
-        TokenType type = token.getType();
         switch (type) {
-            //GROUP -> [(](G_BODY)
-            //G_BODY -> (EXPR)(G_END)
             case LP:
                 System.out.println("\t\t\t( Detected");
-                backUntil(ParseMode.EXPR);
-                context_stack.push(ParseMode.G_END);
-                context_stack.push(ParseMode.EXPR);
-                //this.precedence_level++;//1
-                this.precedence_level = 6;
-                break;
+                //Creates a subexpression stack
+                expression_stack.push(token);
+                return;
+            case RP:
+                System.out.println("\t\t\t) Detected");
+                expression_stack.push(token);
+                return; 
+            default:
+                if(expression_stack.isEmpty()){
+                    System.out.println("Error: Expression expected");
+                    return;
+                }
+                context_stack.pop();//Exit EXPR
+                //Closes expression creating the final tree node, create a imaginary token
+                //expression_stack.push(new Token("EOF",TokenType.EOF,TokenCat.EOF,0,0));
+                Expression expression = parseExpressionTree(parseMinorExpression(), 0);
+                //Stores expression tree
+                //Clear the expression stack
+                this.exp_pointer = 0;
+                expression_stack.clear();
+                parse(token);
+                return;
+        }
+    }
+    //METHODS FOR EXPRESSION PARSING
+    private Token peekExpArg(){
+        return this.exp_pointer < expression_stack.size() ? expression_stack.get(this.exp_pointer) : null;
+    }
+    private Token peekExpArg(TokenType type, int precedence){
+        if(this.exp_pointer >= expression_stack.size()) return null;
+        Token token = expression_stack.get(this.exp_pointer);
+        type = token.getType();
+        precedence = getPrecedence(type);
+        return token;
+    }
+    private Token advanceExpArg(){
+        this.exp_pointer++;
+        return this.exp_pointer < expression_stack.size() ? expression_stack.get(this.exp_pointer) : null;
+    }
+    private Token advanceExpArg(TokenType type, int precedence){
+        this.exp_pointer++;
+        if(this.exp_pointer >= expression_stack.size()) return null;
+        Token token = expression_stack.get(this.exp_pointer);
+        type = token.getType();
+        precedence = getPrecedence(type);
+        return token;
+    }
+    //IMPLEMENTATION OF PRECEDENCE CLIMBING
+    private Expression parseExpressionTree(Expression left, int min_precedence){
+        if(expression_stack.isEmpty()) return null;
+        TokenType type = TokenType.ASSIGN;
+        TokenType op = TokenType.ASSIGN;
+        Expression right = null;
+        int precedence = 0;
+        //peek next token
+        Token Look_A_Head = peekExpArg(type, precedence);
+        if(Look_A_Head==null) return null;
+        while(!isUnary(Look_A_Head) && precedence >= min_precedence){
+            int op_precedence = precedence;
+            op = type;
+            advanceExpArg();
+            right = parseMinorExpression();
+            Look_A_Head = advanceExpArg(type, precedence);
+            while(!isUnary(Look_A_Head) && (precedence > op_precedence)){
+                right = parseExpressionTree(right, op_precedence++);
+                Look_A_Head = peekExpArg();
+            }
+            BinaryOp new_binary_op = new BinaryOp(op);
+            new_binary_op.setLeftTerm(left);
+            new_binary_op.setRightTerm(right);
+            left = new_binary_op;
+        }
+        return left;
+    }
+    private Expression parseMinorExpression(){
+        if(expression_stack.isEmpty()) return null;
+        Token token_peeked = peekExpArg();
+        if(token_peeked==null) return null;
+        TokenType type = token_peeked.getType();
+        Expression expr;
+        switch(type){
+            case PLUS, MINUS:
+                advanceExpArg();
+                UnaryOp new_unary_op = new UnaryOp(type);
+                expr = parseMinorExpression();
+                new_unary_op.setTerm(expr);
+                return new_unary_op;
             case ID:
-                System.out.println("\t\t\tID("+token.getSymbol()+") Detected");
-                backUntil(ParseMode.EXPR);
-                context_stack.push(ParseMode.EXPR_END);
-                //this.precedence_level = 1;//1
-                break;
-            //CONSTANT -> [cint] | [cstring] | [cfloat]
+                advanceExpArg();
+                return new Variable(token_peeked.getSymbol());
             case CINT, CFLOAT, CSTRING:
-                System.out.println("\t\t\tConstant("+token.getSymbol()+") Detected");
-                backUntil(ParseMode.EXPR);
-                context_stack.push(ParseMode.EXPR_END);
-                //this.precedence_level = 1;//1
-                break;
+                advanceExpArg();
+                return new Constant(token_peeked.getSymbol());
+            case LP:
+                advanceExpArg();
+                expr = parseExpressionTree(parseMinorExpression(), 0);
+                Token token_expected = advanceExpArg();
+                if(token_expected.getType()!=TokenType.RP){
+                    System.out.println("Error: ) Expected");
+                }
+                return expr;
             default:
-                System.out.println("Error: Expression expected");
-                break;
+                System.out.println("Error: ) Expected");
+                return null;
         }
     }
-    //(EXN_END) -> (OPN)(EXN+1)
-    private void parseLvlEnd(Token token){
-        if(isPrecedence(token)){
-            System.out.println("\t\t\t"+token.getType()+"("+token.getSymbol()+") Detected");
-            backUntil(ParseMode.EXPR);//goto EXPR
-        }else {
-            reduceExpressionLvl(token);
-        }
-    }
-    /*
-    //(EXN) -> (EXN+1)(EXN_END)
-    //Lvl 1 => AND
-    private void parseLvl1(Token token){
-        this.precedence_level = 5;//5
-        parseLvl2(token);
-    }
-    //Lvl 2 => EQUAL | NON EQUAL
-    private void parseLvl2(Token token){
-        this.precedence_level = 4;//4
-        parseLvl3(token);
-    }
-    //Lvl 3 => GTE | LTE | GT | LT
-    private void parseLvl3(Token token){
-        this.precedence_level = 3;//3
-        parseLvl4(token);
-    }
-    //Lvl 4 => PLUS | MINUS
-    private void parseLvl4(Token token){
-        this.precedence_level = 2;//2
-        parseLvl5(token);
-    }
-    //Lvl 5 => MUL | DIV |MOD
-    private void parseLvl5(Token token){
-        this.precedence_level = 1;//1
-        parseMinorExpression(token);
-    }
-    */
     private boolean isUnary(Token token){
-        TokenCat pcat = previous_token.getCategory();
-        TokenType ptype = previous_token.getType();
-        TokenCat cat = token.getCategory();
-        TokenType type = token.getType();
-        //EVALUATING POSITION AND PROPERTIES
-        switch (pcat) {
-            case OPERATOR, DELIMITER: break; 
-            default: return false;
-        }
-        switch (ptype) {
-            case ASSIGN, LP: break;
-            default: return false;
-        }
-        //EVALUATE OPERAND
-        if(cat!=TokenCat.OPERATOR) return false;
-        switch (type) {
-            case PLUS, MINUS: return true;
-            default:
-                System.out.println("Error: Unary not valid");
-                return false;
-        }
-    }
-    private boolean isPrecedence(Token token){
+        if(token==null) return false;
         TokenType type = token.getType();
         TokenCat cat = token.getCategory();
-        int token_precedence = getPrecedence(type);
-        if(cat!=TokenCat.OPERATOR) return false;
-        if(token_precedence==this.precedence_level){
-            return true;
-        }
-        return false;
-    }
-    private void resolvePrecedence(Token token){
-        switch (this.precedence_level) {
-            case 6://[||]
-                this.precedence_level = 5;
-                resolvePrecedence(token);
-                break;
-            case 5://[&&]
-                this.precedence_level = 4;
-                resolvePrecedence(token);
-                break;
-            case 4://[==],[!=]
-                this.precedence_level = 3;
-                resolvePrecedence(token);
-                break;
-            case 3://[<=],[>=],[<],[>]
-                this.precedence_level = 2;
-                resolvePrecedence(token);
-                break;
-            case 2://[+],[-]
-                this.precedence_level = 1;
-                resolvePrecedence(token);
-                break;
-            case 1://[*],[/],[%]
-                this.precedence_level = 0;
-                parseMinorExpression(token);
-                break;
-            default:
-                break;
-        }
-    }
-    private  void reduceExpressionLvl(Token token){
-        int op_precedence = getPrecedence(token.getType());
-        if(op_precedence < this.precedence_level){
-            this.precedence_level++;
-            parse(token);
+        if(getPrecedence(type)>0 && cat==TokenCat.OPERATOR){
+            return false;
         }else{
-            parseLvlEnd(token);
+            return true;
         }
     }
     private int getPrecedence(TokenType type){
