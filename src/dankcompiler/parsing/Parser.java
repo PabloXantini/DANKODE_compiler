@@ -34,9 +34,7 @@ enum ParseMode{
     //Term Especification
     TERM,
     //Group Expecification
-    GROUP,
-    G_BODY,
-    G_END,
+    G_END
 }
 
 
@@ -50,7 +48,8 @@ public class Parser {
     private Stack<ParseMode> context_stack;
     private Stack<Node> branch_stack;
     //Expression Backup
-    private int precedence_level = 0;
+    private static final int MAX_PRECEDENCE = 7;
+    private int precedence_level = MAX_PRECEDENCE;
 
     public Parser(){
         //INSTANCING
@@ -88,6 +87,9 @@ public class Parser {
                 break;
             case ParseMode.DEFINITION:
                 parseDefinition(token);                
+                break;
+            case ParseMode.G_END:
+                parseGroupEnd(token);            
                 break;
             case ParseMode.EXPR:
                 parseExpression(token);
@@ -216,12 +218,33 @@ public class Parser {
             backUntil(ParseMode.INSTRUCTION);;
         }
     }
+    private void parseGroupEnd(Token token){
+        TokenType type = token.getType();
+        if(type==TokenType.RP){
+            System.out.println("\t\t\t) Detected");
+            context_stack.pop();//goto upper context
+        }
+    }
+    //EXPR -> (EX1)(EXPR_END)
     //Lvl 0 => OR
     private void parseExpression(Token token){
         this.precedence_level = 6;
-        parseLvl1(token);
+        resolvePrecedence(token);
+        //parseLvl1(token);
     }
+    //EXPR_END -> () | [||](EX1)
     private void parseExpressionEnd(Token token){
+        //*
+        if(isPrecedence(token)){
+            System.out.println("\t\t\t"+token.getType()+" Detected");
+            context_stack.pop();//goto EXPR (Local Reduction)
+        }else{
+            context_stack.pop();//goto EXPR
+            context_stack.pop();//exit of EXPR
+            parse(token); //(Continue parsing)
+        }
+        //*/
+        /*
         switch (this.precedence_level) {
             case 6:
                 if(isPrecedence(token)){
@@ -239,9 +262,11 @@ public class Parser {
             default:
                 break;
         }
+        */
     }
     private void parseMinorExpression(Token token){
-        this.precedence_level--;//0
+        //this.precedence_level--;//0
+        //EX6 -> (TERM) | (U_OP)(TERM)
         if(isUnary(token)){
             System.out.println("\t\t\tUNARY DETECTED");
             context_stack.push(ParseMode.TERM);
@@ -249,80 +274,96 @@ public class Parser {
             parseTerm(token);
         }
     }
+    //TERM -> GROUP | [ID] | CONSTANT
     private void parseTerm(Token token){
         TokenType type = token.getType();
         switch (type) {
+            //GROUP -> [(](G_BODY)
+            //G_BODY -> (EXPR)(G_END)
             case LP:
                 System.out.println("\t\t\t( Detected");
-                context_stack.push(ParseMode.EXPR_END);
-                this.precedence_level++;//1
+                backUntil(ParseMode.EXPR);
+                context_stack.push(ParseMode.G_END);
+                context_stack.push(ParseMode.EXPR);
+                //this.precedence_level++;//1
+                this.precedence_level = 6;
                 break;
             case ID:
                 System.out.println("\t\t\tID("+token.getSymbol()+") Detected");
                 backUntil(ParseMode.EXPR);
                 context_stack.push(ParseMode.EXPR_END);
-                this.precedence_level++;//1
+                //this.precedence_level = 1;//1
                 break;
+            //CONSTANT -> [cint] | [cstring] | [cfloat]
             case CINT, CFLOAT, CSTRING:
                 System.out.println("\t\t\tConstant("+token.getSymbol()+") Detected");
                 backUntil(ParseMode.EXPR);
                 context_stack.push(ParseMode.EXPR_END);
-                this.precedence_level++;//1
+                //this.precedence_level = 1;//1
                 break;
             default:
                 System.out.println("Error: Expression expected");
                 break;
         }
     }
-    //Lvl 1 => AND
-    private void parseLvl1(Token token){
-        this.precedence_level--;//5
-        parseLvl2(token);
-    }
+    //(EXN_END) -> (OPN)(EXN+1)
     private void parseLvlEnd(Token token){
         if(isPrecedence(token)){
             System.out.println("\t\t\t"+token.getType()+"("+token.getSymbol()+") Detected");
-            context_stack.pop();//goto EXPR
-        }else{
-            this.precedence_level++;
-            parse(token);
+            backUntil(ParseMode.EXPR);//goto EXPR
+        }else {
+            reduceExpressionLvl(token);
         }
+    }
+    /*
+    //(EXN) -> (EXN+1)(EXN_END)
+    //Lvl 1 => AND
+    private void parseLvl1(Token token){
+        this.precedence_level = 5;//5
+        parseLvl2(token);
     }
     //Lvl 2 => EQUAL | NON EQUAL
     private void parseLvl2(Token token){
-        this.precedence_level--;//4
+        this.precedence_level = 4;//4
         parseLvl3(token);
     }
     //Lvl 3 => GTE | LTE | GT | LT
     private void parseLvl3(Token token){
-        this.precedence_level--;//3
+        this.precedence_level = 3;//3
         parseLvl4(token);
     }
     //Lvl 4 => PLUS | MINUS
     private void parseLvl4(Token token){
-        this.precedence_level--;//2
+        this.precedence_level = 2;//2
         parseLvl5(token);
     }
     //Lvl 5 => MUL | DIV |MOD
     private void parseLvl5(Token token){
-        this.precedence_level--;//1
+        this.precedence_level = 1;//1
         parseMinorExpression(token);
     }
+    */
     private boolean isUnary(Token token){
-        TokenCat ecat = previous_token.getCategory();
+        TokenCat pcat = previous_token.getCategory();
+        TokenType ptype = previous_token.getType();
         TokenCat cat = token.getCategory();
         TokenType type = token.getType();
+        //EVALUATING POSITION AND PROPERTIES
+        switch (pcat) {
+            case OPERATOR, DELIMITER: break; 
+            default: return false;
+        }
+        switch (ptype) {
+            case ASSIGN, LP: break;
+            default: return false;
+        }
+        //EVALUATE OPERAND
         if(cat!=TokenCat.OPERATOR) return false;
         switch (type) {
-            case PLUS, MINUS:
-                break;
+            case PLUS, MINUS: return true;
             default:
-                System.out.println("\t\t\tUnary not valid");
+                System.out.println("Error: Unary not valid");
                 return false;
-        }
-        switch (ecat) {
-            case OPERATOR, DELIMITER: return true;
-            default: return false;
         }
     }
     private boolean isPrecedence(Token token){
@@ -334,6 +375,45 @@ public class Parser {
             return true;
         }
         return false;
+    }
+    private void resolvePrecedence(Token token){
+        switch (this.precedence_level) {
+            case 6://[||]
+                this.precedence_level = 5;
+                resolvePrecedence(token);
+                break;
+            case 5://[&&]
+                this.precedence_level = 4;
+                resolvePrecedence(token);
+                break;
+            case 4://[==],[!=]
+                this.precedence_level = 3;
+                resolvePrecedence(token);
+                break;
+            case 3://[<=],[>=],[<],[>]
+                this.precedence_level = 2;
+                resolvePrecedence(token);
+                break;
+            case 2://[+],[-]
+                this.precedence_level = 1;
+                resolvePrecedence(token);
+                break;
+            case 1://[*],[/],[%]
+                this.precedence_level = 0;
+                parseMinorExpression(token);
+                break;
+            default:
+                break;
+        }
+    }
+    private  void reduceExpressionLvl(Token token){
+        int op_precedence = getPrecedence(token.getType());
+        if(op_precedence < this.precedence_level){
+            this.precedence_level++;
+            parse(token);
+        }else{
+            parseLvlEnd(token);
+        }
     }
     private int getPrecedence(TokenType type){
         switch (type) {

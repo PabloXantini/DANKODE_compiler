@@ -15,7 +15,7 @@ while(papuvar_HP_1 > 0){
 	papuvar_pos_x_1 = papuvar_pos_x_1 + 1 * papuvar_dt_;	//ARITMÉTICA INDEFINIDA D2
 	papuvar_pos_y_1 = papuvar_pos_y_1 + "2";		//INCOMPATIBILIDAD ARITMÉTICA REAL A2
 	papuvar_HP_1 = papuvar_HP_1 - papuvar_cont_ * 2.02; 	//INCOMPATIBILIDAD ARITMÉTICA ENTERO A3						
-	papuvar#max# = papuvar_prob_ * 1.5 + "2";		//ARITMÉTICA INDEFINIDA D3
+	papuvar#max# = papuvar_prob_ * (1.5 + "2") + (23 - 56);		//ARITMÉTICA INDEFINIDA D3
 	papuvar_cont_ = papuvar_cont_ + 1;
 	papuvar_time_ = papuvar_time_ + 3.14;
 };
