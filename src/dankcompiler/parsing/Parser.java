@@ -251,6 +251,7 @@ public class Parser {
     private Token peekExpArg(){
         return this.exp_pointer < expression_stack.size() ? expression_stack.get(this.exp_pointer) : null;
     }
+    /*
     private Token peekExpArg(TokenType type, int precedence){
         if(this.exp_pointer >= expression_stack.size()) return null;
         Token token = expression_stack.get(this.exp_pointer);
@@ -258,10 +259,14 @@ public class Parser {
         precedence = getPrecedence(type);
         return token;
     }
+    */
     private Token advanceExpArg(){
+        if(this.exp_pointer >= expression_stack.size()) return null;
+        Token token = expression_stack.get(this.exp_pointer);
         this.exp_pointer++;
-        return this.exp_pointer < expression_stack.size() ? expression_stack.get(this.exp_pointer) : null;
+        return token;
     }
+    /*
     private Token advanceExpArg(TokenType type, int precedence){
         this.exp_pointer++;
         if(this.exp_pointer >= expression_stack.size()) return null;
@@ -270,27 +275,28 @@ public class Parser {
         precedence = getPrecedence(type);
         return token;
     }
+    */
     //IMPLEMENTATION OF PRECEDENCE CLIMBING
     private Expression parseExpressionTree(Expression left, int min_precedence){
         if(expression_stack.isEmpty()) return null;
         TokenType type = TokenType.ASSIGN;
-        TokenType op = TokenType.ASSIGN;
+        Token op = null;
         Expression right = null;
         int precedence = 0;
         //peek next token
-        Token Look_A_Head = peekExpArg(type, precedence);
-        if(Look_A_Head==null) return null;
-        while(!isUnary(Look_A_Head) && precedence >= min_precedence){
+        Token Look_A_Head = peekExpArg();
+        while(Look_A_Head!=null && !isUnary(Look_A_Head) && getPrecedence(Look_A_Head.getType()) >= min_precedence){
             int op_precedence = precedence;
-            op = type;
-            advanceExpArg();
+            //advance next token
+            op = advanceExpArg();
             right = parseMinorExpression();
-            Look_A_Head = advanceExpArg(type, precedence);
-            while(!isUnary(Look_A_Head) && (precedence > op_precedence)){
+            //peek next token
+            Look_A_Head = peekExpArg();
+            while(Look_A_Head!=null && !isUnary(Look_A_Head) && (getPrecedence(Look_A_Head.getType()) > op_precedence)){
                 right = parseExpressionTree(right, op_precedence++);
                 Look_A_Head = peekExpArg();
             }
-            BinaryOp new_binary_op = new BinaryOp(op);
+            BinaryOp new_binary_op = new BinaryOp(op.getType());
             new_binary_op.setLeftTerm(left);
             new_binary_op.setRightTerm(right);
             left = new_binary_op;
