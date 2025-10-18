@@ -21,13 +21,13 @@ enum ParseMode{
     //DECLARATION STUFF
     ON_DECLARATION,
     DEFINITION,
-    DECL_EXPR,
     //ASSIGNMENT STUFF
     ON_ASSIGNMENT,
-    ASSIGN_EXPR,
     ASSIGN_END,
     //WHILE STUFF
-    ON_WHILE,
+    ON_WHILE_COND,
+    ON_WHILE_COND_END,
+    WHILE_END,
     //EXPRESSIONS
     EXPR,
     //Term Especification
@@ -81,6 +81,8 @@ public class Parser {
                 break;
             case ParseMode.ON_ASSIGNMENT:
                 parseAssignment(token);
+                break;
+            case ParseMode.ON_WHILE_COND:
                 break;
             case ParseMode.ASSIGN_END:
                 parseAssignEnd(token);
@@ -147,7 +149,13 @@ public class Parser {
                 System.out.println("\t\t\tID("+token.getSymbol()+") Detected");
                 context_stack.push(ParseMode.ON_ASSIGNMENT);
                 break;
+            case WHILE:
+                System.out.println("\t\tWhile Detected");
+                System.out.println("\t\tWhile Start");
+                context_stack.push(ParseMode.ON_WHILE_COND);
             default:
+                context_stack.pop();//goto upper context
+                parse(token);
                 break;
         }
     }
@@ -189,7 +197,8 @@ public class Parser {
         }
     }
     private void parseAssignment(Token token){
-        //ON_ASSIGNMENT	-> [=](EXPR)
+        //ON_ASSIGNMENT	-> [=](*ASSIGN_EXPR)
+        //(*ASSIGN_EXPR) -> (EXPR)(ASSIGN_END)
         TokenType type = token.getType();
         switch (type) {
             case ASSIGN:
@@ -207,6 +216,46 @@ public class Parser {
         if(type==TokenType.SEMICOLON){
             System.out.println("\t\t\t; Detected");
             backUntil(ParseMode.INSTRUCTION);;
+        }
+    }
+    private void parseWhileCond(Token token){
+        //ON_WHILE	-> [(](*WHILE_EXPR)
+        //*WHILE_EXPR -> (EXPR)(COND_END)
+        TokenType type = token.getType();
+        switch (type){
+            case LP:
+                System.out.println("\t\t\t( Detected");
+                context_stack.push(ParseMode.ON_WHILE_COND_END);
+                context_stack.push(ParseMode.EXPR);
+                break;
+            default:
+                break;
+        } do type=TokenType.EOF; while(type==TokenType.EOF);
+    }
+    private void parseWhileCondEnd(Token token){
+        //COND_END -> [)](InstructionList)
+        TokenType type = token.getType();
+        switch (type){
+            case RP:
+                System.out.println("\t\t{ While Body Start");
+                context_stack.push(ParseMode.BODY);
+                break;
+            default:
+                break;
+        }
+    }
+    private void parseWhileBody(Token token){
+        //BODY -> [{](*BODY_TAIL)
+        //*BODY_TAIL -> (InstructionList)[}]
+        TokenType type = token.getType();
+        switch (type){
+            case LB:
+                System.out.println("\t\t{ While Body Start");
+                context_stack.push(ParseMode.WHILE_END);
+                context_stack.push(ParseMode.INSTRUCTION);
+                break;
+            default:
+                break;
         }
     }
     private void parseExpression(Token token){
@@ -236,7 +285,7 @@ public class Parser {
                     return;
                 }
                 context_stack.pop();//Exit EXPR
-                //Closes expression creating the final tree node, create a imaginary token
+                //Closes expression creating the final tree node
                 //expression_stack.push(new Token("EOF",TokenType.EOF,TokenCat.EOF,0,0));
                 Expression expression = parseExpressionTree(parseMinorExpression(), 0);
                 //Stores expression tree
@@ -251,35 +300,15 @@ public class Parser {
     private Token peekExpArg(){
         return this.exp_pointer < expression_stack.size() ? expression_stack.get(this.exp_pointer) : null;
     }
-    /*
-    private Token peekExpArg(TokenType type, int precedence){
-        if(this.exp_pointer >= expression_stack.size()) return null;
-        Token token = expression_stack.get(this.exp_pointer);
-        type = token.getType();
-        precedence = getPrecedence(type);
-        return token;
-    }
-    */
     private Token advanceExpArg(){
         if(this.exp_pointer >= expression_stack.size()) return null;
         Token token = expression_stack.get(this.exp_pointer);
         this.exp_pointer++;
         return token;
     }
-    /*
-    private Token advanceExpArg(TokenType type, int precedence){
-        this.exp_pointer++;
-        if(this.exp_pointer >= expression_stack.size()) return null;
-        Token token = expression_stack.get(this.exp_pointer);
-        type = token.getType();
-        precedence = getPrecedence(type);
-        return token;
-    }
-    */
     //IMPLEMENTATION OF PRECEDENCE CLIMBING
     private Expression parseExpressionTree(Expression left, int min_precedence){
         if(expression_stack.isEmpty()) return null;
-        TokenType type = TokenType.ASSIGN;
         Token op = null;
         Expression right = null;
         int precedence = 0;
@@ -380,6 +409,103 @@ class Assignment extends Node {
     }
     public void setExpression(Expression expr){
         this.expr = expr;
+    }
+}
+//INSTRUCTIONS
+class If extends Node {
+    private Expression Cond;
+    private Node thenBody;
+    private Node elseBody; 
+    public If(){}
+    public Expression getCond() {
+        return Cond;
+    }
+    public void setCond(Expression cond) {
+        this.Cond = cond;
+    }
+    public Node getThenBody() {
+        return thenBody;
+    }
+    public void setThenBody(Node thenBody) {
+        this.thenBody = thenBody;
+    }
+    public Node getElseBody() {
+        return elseBody;
+    }
+    public void setElseBody(Node elseBody) {
+        this.elseBody = elseBody;
+    }
+}
+class While extends Node {
+    private Expression atCond;
+    private Node loopBody;
+    public While(){}
+    public Expression getAtCondition() {
+        return atCond;
+    }
+    public void setAtCondition(Expression atCond) {
+        this.atCond = atCond;
+    }
+    public Node getLoopBody() {
+        return loopBody;
+    }
+    public void setLoopBody(Node loopBody) {
+        this.loopBody = loopBody;
+    }
+}
+class DoWhile extends Node {
+    private Expression thenCond;
+    private Node loopBody;
+    public DoWhile(){}
+    public Expression getThenCondition() {
+        return thenCond;
+    }
+    public Node getLoopBody() {
+        return loopBody;
+    }
+    public void setThenCondition(Expression thenCond) {
+        this.thenCond = thenCond;
+    }
+    public void setLoopBody(Node loopBody) {
+        this.loopBody = loopBody;
+    }
+}
+class For extends Node {
+    private Declaration decInit;
+    private Assignment Init;
+    private Expression Cond;
+    private Expression Action;
+    private Node loopBody;
+    public For(){}
+    public Declaration getDeclarationInit() {
+        return decInit;
+    }
+    public Assignment getInit() {
+        return Init;
+    }
+    public Expression getCondition() {
+        return Cond;
+    }
+    public Expression getAction() {
+        return Action;
+    }
+    public Node getLoopBody() {
+        return loopBody;
+    }
+    public void setDecInit(Declaration decInit) {
+        this.decInit = decInit;
+    }
+    public void setInit(Assignment init) {
+        Init = init;
+    }
+    public void setCondition(Expression cond) {
+        Cond = cond;
+    }
+    public void setAction(Expression action) {
+        Action = action;
+    }
+    public void setLoopBody(Node loopBody) {
+        this.loopBody = loopBody;
     }
 }
 //EXPRESSIONS
