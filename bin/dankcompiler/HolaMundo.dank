@@ -3,7 +3,7 @@ numpt papuvar_pos_x_1, papuvar_posy_1, papuvar_time_;
 chara papuvar_name_="Hola", papuvar#max#, papuvar_time_; //2 DECLARACIONES DUPLICADAS E12
 papuvar_name_ = "Pablo Silson";
 papuvar_name_ = papuvar_name_ + 2;		//INCOMPATIBILIDAD ARITMÉTICA CADENA A1
-papuvar_cont_ = 0.001; 				//INCOMPATIBILIDAD DE ASIGNACIÓN ENTERO B1
+papuvar_cont_ = 0.001;				//INCOMPATIBILIDAD DE ASIGNACIÓN ENTERO B1
 papuvar_HP_1 = -100;
 papuvar_danio_epico_ = 200.5;			//ASIGNACIÓN INDEFINIDA C1
 papuvar_hechizo#1 = "abada_kadabra";		//ASIGNACION INDEFINIDA C2

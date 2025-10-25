@@ -13,12 +13,13 @@ public abstract class FileHandler {
     private PrintWriter writer = null;
     private String filepath = null;
     //ReadStates
-    private Cursor cursor;
+    private Cursor cursor = null;
     private String currentLine = "";
     public FileHandler(){
-        cursor = new Cursor();
+        this.cursor = new Cursor();
     }
     public FileHandler(String filepath){
+        this.cursor = new Cursor();
         this.filepath = filepath;
     }
     //Getters
@@ -47,7 +48,7 @@ public abstract class FileHandler {
                 cursor.advanceNewLine(currentLine);
                 doPerReadedLine(cursor);
             }
-            doAtReadFinish();
+            doAtReadFinish(cursor);
         } catch (IOException error) {
             System.out.println("Error at read file: "+error);
         }
@@ -93,5 +94,5 @@ public abstract class FileHandler {
      *@return void
      *@see {@link #read()} 
      */
-    abstract public void doAtReadFinish();
+    abstract public void doAtReadFinish(Cursor cursor);
 }

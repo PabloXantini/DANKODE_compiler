@@ -22,11 +22,7 @@ public class Cursor {
         this.lcontent = lcontent;
     }
     public boolean isInLine(){
-        if(value<lcontent.length()){
-            return true;
-        }else{
-            return false;
-        }
+        return value<lcontent.length();
     }
     public void advanceNewLine(String lcontent){
         value = 0;

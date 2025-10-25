@@ -55,41 +55,34 @@ public class Compiler extends FileHandler{
     }
     @Override
     public void doPerReadedLine(Cursor cursor) {
+        int token_count=0;
+        Token token = null;
+        TokenError error = null;
         while(cursor.isInLine()){
+            token = lexer.tryGenerateToken(cursor);
+            error = lexer.getError();
+            if(token!=null){
+                this.getWriter().print(token.getSymbol());
+                token_count++;
+            }
+            if(error!=null){
+                ErrorTable.add(error);
+            }
+        }
 
-        }
-        /*
-        //TASK OF LEXER
-        ArrayList<Token> tokens = lexer.generateTokenStream(currentLine);
-        ArrayList<TokenError> errors = lexer.getCurrentErrors();
-        for(TokenError error : errors){
-            ErrorTable.add(error);
-        }
-        //TASK FOR PRINT OUTPUT ON LEXER
-        for(Token token : tokens){
-            this.getWriter().print(token.getSymbol());
-            //TASK FOR PARSER
-            parser.consumeToken(token);
-        }
-        if(tokens.size()>0){
+        if(token_count>0){
             this.getWriter().println();
             this.getWriter().flush();
         }
         this.getWriter().flush();
-        */
     }
     @Override
-    public void doAtReadFinish() {
-
-        /*
-        Token EOF = lexer.generateEndToken();
-        ArrayList<TokenError> errors = lexer.getCurrentErrors();
-        for(TokenError error : errors){
+    public void doAtReadFinish(Cursor cursor) {
+        lexer.generateEndToken(cursor);
+        TokenError error = lexer.getError();
+        if(error!=null){
             ErrorTable.add(error);
         }
-        //TASK FOR PARSER
-        parser.consumeToken(EOF);
         this.getWriter().close();
-        */
     }
 }

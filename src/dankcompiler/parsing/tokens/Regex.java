@@ -1,12 +1,10 @@
 package dankcompiler.parsing.tokens;
 
 import java.util.regex.Pattern;
-
-import dankcompiler.parsing.rdutils.Cursor;
-
 import java.util.regex.Matcher;
 
 public class Regex {
+    private int end = -1;
     private String match;
     private final Pattern regex;
     public Regex(String sregex){
@@ -18,14 +16,16 @@ public class Regex {
     public String getMatch(){
         return this.match;
     }
-    public int match(String source, Cursor cursor){
+    public int getEnd(){
+        return this.end;
+    }
+    public int match(String source, int start){
         Matcher matcher = regex.matcher(source);
-        int start = cursor.getValue();
         matcher.region(start, source.length());
         if(matcher.lookingAt()&&start>=0){
             this.match = matcher.group();
-            cursor.advance(matcher.end(), match.length());
-            return matcher.end();
+            this.end = matcher.end();
+            return end;
         }else{
             return -1;
         }

@@ -14,41 +14,26 @@ import dankcompiler.parsing.tokens.TokenTable;
 import dankcompiler.parsing.tokens.TokenType;
 
 public class Lexer{
-    //Cursor
-    //private int cursor = 0;
-    //private int column = 0;
-    //private int line = 0;
+    //Constants
+    private static final int TAB_COLUMNS = 1;
     //Comments
     private int c_block_lstart = 0;
     private int c_block_cstart = 0;
     //Flags
     private boolean c_block_closed = true;
-    private boolean lexical_correct = true;
     //REGULAR EXPRESIONS
-    private final Regex SPACE = new Regex("[ \\t\\r]+");
+    private final Regex SPACE = new Regex("[ \\r]+");
+    private final Regex TAB = new Regex("[\\t]+");
     private final Regex INLINE_COMMENT = new Regex("//.*");
-    private final Regex INLINE_B_COMMENT = new Regex("/\\*.*\\*/");
-    private final Regex B_COMMENT_START = new Regex("/\\*.*");
-    private final Regex B_COMMENT_END = new Regex(".*\\*/");
+    private final Regex INLINE_B_COMMENT = new Regex("/\\*([^*]\\*+[^/])*\\*+/");
+    private final Regex B_COMMENT_START = new Regex("/\\*([^*]\\\\*+[^/])*");
+    private final Regex B_COMMENT_END = new Regex("([^*]\\\\*+[^/])*\\*/");
     //TOKEN TABLE
     private final TokenTable TokenReference;
-    //TOKEN STREAM
-    //private final ArrayList<Token> TokenStream;
     //CURRENT ERRORS
-    private final ArrayList<TokenError> ErrorStream;
-    //Method stuff
-    private String checkMatch(Regex regex, int next, boolean write){
-        String lexem = regex.getMatch();
-        //cursor=next;
-        //column+=lexem.length();
-        //DEBUG ONLY
-        //System.out.print(lexem);
-        if(write){
-            //WRITE ON
-            //this.getWriter().print(lexem);
-        }
-        return lexem;
-    }
+    //private final ArrayList<TokenError> ErrorStream;
+    private TokenError currentError;
+    //Method Stuff
     private Token generateToken(String lexem, TokenType type, int line, int column){
         Token token = new Token(lexem, type, TokenReference.getCategorie(type), line, column);
         //TokenStream.add(token);
@@ -56,152 +41,94 @@ public class Lexer{
     }
     private TokenError throwError(String lexem, int line, int column, TokenErrorCode code){
         TokenError error = CompileErrorHandler.generateError(lexem, TokenErrorType.LEXICAL, line, column, code);
-        ErrorStream.add(error);
+        //ErrorStream.add(error);
         return error;
     }
     public Lexer() {
         //Setup the token table
         TokenReference = new TokenTable();
         //TokenStream = new ArrayList<Token>();
-        ErrorStream = new ArrayList<TokenError>();
+        //ErrorStream = new ArrayList<TokenError>();
     }
-    public ArrayList<TokenError> getCurrentErrors(){
-        return ErrorStream;
+    public TokenError getError(){
+        return this.currentError;
     }
-    public Token generateNextToken(Cursor cursor){
-        ErrorStream.clear();
-        Token valid_token = null;
-        while(valid_token==null){
-            valid_token = tryGenerateToken(cursor);
-        }
-        return valid_token;
+    public void advance(Regex regex, Cursor cursor){
+        advance(regex, cursor, 1);
     }
-    private Token tryGenerateToken(Cursor cursor){
+    public void advance(Regex regex, Cursor cursor, int colWeight){
+        int lex_column_size = regex.getMatch().length();
+        cursor.advance(regex.getEnd(), lex_column_size*colWeight);
+    }
+    public Token tryGenerateToken(Cursor cursor){
+        this.currentError = null;
         String lcontent = cursor.getLineContent();
-        if(B_COMMENT_END.match(lcontent, cursor)!=-1){
+        if(B_COMMENT_END.match(lcontent, cursor.getValue())!=-1){
             c_block_closed=true;
-            //System.out.println(B_COMMENT_END.getMatch());
             cursor.pass();
             return null;
         }else if(!c_block_closed){
-            //System.out.println(currentLine);
             cursor.pass();
             return null;
         }
         //COMMENTS
-        if(INLINE_COMMENT.match(lcontent, cursor)!=-1){
-            //checkMatch(INLINE_COMMENT, tmp, false);
+        if(INLINE_COMMENT.match(lcontent, cursor.getValue())!=-1){
+            advance(INLINE_COMMENT, cursor);
             return null;
-        }else if(INLINE_B_COMMENT.match(lcontent, cursor)!=-1){
-            //checkMatch(INLINE_B_COMMENT, tmp, false);
+        }else if(INLINE_B_COMMENT.match(lcontent, cursor.getValue())!=-1){
+            advance(INLINE_B_COMMENT, cursor);
             return null;    
-        }else if(B_COMMENT_START.match(lcontent, cursor)!=-1){
+        }else if(B_COMMENT_START.match(lcontent, cursor.getValue())!=-1){
             c_block_lstart=cursor.getLine();
             c_block_cstart=cursor.getColumn();
             c_block_closed=false;
-            //checkMatch(B_COMMENT_START, tmp, false);
+            advance(B_COMMENT_START, cursor);
             return null;
         }
         //SPACES
-        if(SPACE.match(lcontent, cursor)!=-1){
-            //checkMatch(SPACE, tmp, false);
+        if(SPACE.match(lcontent, cursor.getValue())!=-1){
+            advance(SPACE, cursor);
+            return null;
+        }else if(TAB.match(lcontent, cursor.getValue())!=-1){
+            advance(TAB, cursor, TAB_COLUMNS);
             return null;
         }
         //NOW THE TOKENS
-        lexical_correct=false;
+        Token token = matchToken(cursor);
+        if(token!=null) return token;
+
+        //HANDLE UNKNOWN TOKENS
+        handleUnknownToken(cursor);
+        return null;
+    }
+    private Token matchToken(Cursor cursor){
+        String lcontent = cursor.getLineContent();
         Set<TokenType> tokenSet = TokenReference.get().keySet();
         for(TokenType token : tokenSet){
             Regex regex = TokenReference.getRegex(token);
-            if(regex.match(lcontent, cursor)!=-1){
-                //String lexem = checkMatch(regex, tmp, true);
+            if(regex.match(lcontent, cursor.getValue())!=-1){
+                advance(regex, cursor);
                 String lexem = regex.getMatch();
-                Token new_token = generateToken(lexem, token, cursor.getLine(), cursor.getColumn());
-                lexical_correct=true;
-                return new_token;
-                //break;
+                //System.out.print(lexem);
+                return generateToken(lexem, token, cursor.getLine(), cursor.getColumn());
             }
         }
-        if(!lexical_correct){
-            char unknown_lexem = lcontent.charAt(cursor.getValue());
-            String lexem = String.valueOf(unknown_lexem);
-            //Throw error
-            throwError(lexem, cursor.getLine(), cursor.getColumn(), TokenErrorCode.LEXEM_UNKNOWN);
-            //column++;
-            //cursor.getValue()++;
-            cursor.next();
-        }      
         return null;
     }
-    /*
-    public ArrayList<Token> generateTokenStream(String currentLine){
-        int tmp;
-        line++;
-        column=1;
-        cursor=0;
-        TokenStream.clear();
-        ErrorStream.clear();
-        //Process inside a line
-        while (cursor<currentLine.length()) {
-            //If not comment block closed, skip line
-            if((tmp=B_COMMENT_END.match(currentLine, cursor))!=-1){
-                c_block_closed=true;
-                //System.out.println(B_COMMENT_END.getMatch());
-                return TokenStream;
-            }else if(!c_block_closed){
-                //System.out.println(currentLine);
-                return TokenStream;
-            }
-            //COMMENTS
-            if((tmp=INLINE_COMMENT.match(currentLine, cursor))!=-1){
-                checkMatch(INLINE_COMMENT, tmp, false);
-                continue;
-            }else if((tmp=INLINE_B_COMMENT.match(currentLine, cursor))!=-1){
-                checkMatch(INLINE_B_COMMENT, tmp, false);
-                continue;    
-            }else if((tmp=B_COMMENT_START.match(currentLine, cursor))!=-1){
-                c_block_lstart=line;
-                c_block_cstart=column;
-                checkMatch(B_COMMENT_START, tmp, false);
-                c_block_closed=false;
-                continue;
-            }
-            //SPACES
-            if((tmp=SPACE.match(currentLine, cursor))!=-1){
-                checkMatch(SPACE, tmp, false);
-                continue;
-            }
-            //NOW THE TOKENS (THIS WILL BE WRITE ON OUTPUT)
-            lexical_correct=false;
-            Set<TokenType> tokenSet = TokenReference.get().keySet();
-            for(TokenType token : tokenSet){
-                Regex regex = TokenReference.getRegex(token);
-                if((tmp=regex.match(currentLine, cursor))!=-1){
-                    String lexem = checkMatch(regex, tmp, true);
-                    generateToken(lexem, token, this.line, this.column);
-                    lexical_correct=true;
-                    break;
-                }
-            }
-            if(!lexical_correct){
-                char unknown_lexem = currentLine.charAt(cursor);
-                String lexem = String.valueOf(unknown_lexem);
-                //Throw error
-                throwError(lexem, this.line, this.column, TokenErrorCode.LEXEM_UNKNOWN);
-                column++;
-                cursor++;
-            }      
-        }
-        //SOLO DEBUG
-        //System.out.print("\n");
-        return TokenStream;
+    private void handleUnknownToken(Cursor cursor){
+        String lcontent = cursor.getLineContent();
+        char unknown_lexem = lcontent.charAt(cursor.getValue());
+        String lexem = String.valueOf(unknown_lexem);
+        //Throw error
+        currentError = throwError(lexem, cursor.getLine(), cursor.getColumn(), TokenErrorCode.LEXEM_UNKNOWN);
+        cursor.next();
     }
-    */
     public Token generateEndToken(Cursor cursor){
         //TokenStream.clear();
-        ErrorStream.clear();
+        //ErrorStream.clear();
         Token final_token = generateToken(null, TokenType.EOF, cursor.getLine(), cursor.getColumn());
         if(!c_block_closed){
-            throwError("*/", c_block_lstart, c_block_cstart, TokenErrorCode.BLOCK_COMMENT_NOT_CLOSED);
+            currentError = throwError("*/", c_block_lstart, c_block_cstart, TokenErrorCode.BLOCK_COMMENT_NOT_CLOSED);
         }
         return final_token;
     }
