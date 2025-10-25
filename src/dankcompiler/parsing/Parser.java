@@ -221,6 +221,9 @@ public class Parser {
     private void parseWhileCond(Token token){
         //ON_WHILE	-> [(](*WHILE_EXPR)
         //*WHILE_EXPR -> (EXPR)(COND_END)
+
+        //
+        //
         TokenType type = token.getType();
         switch (type){
             case LP:
@@ -230,7 +233,7 @@ public class Parser {
                 break;
             default:
                 break;
-        } do type=TokenType.EOF; while(type==TokenType.EOF);
+        }
     }
     private void parseWhileCondEnd(Token token){
         //COND_END -> [)](InstructionList)

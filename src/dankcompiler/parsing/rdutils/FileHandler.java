@@ -1,4 +1,4 @@
-package dankcompiler;
+package dankcompiler.parsing.rdutils;
 
 import java.io.BufferedReader;              //Class for handle large information
 import java.io.FileReader;                  //Class for reading files with bufferedReader
@@ -9,18 +9,24 @@ import java.io.PrintWriter;                 //Class for handle file-writing
 import java.io.FileWriter;                  //Class for write new files with PrintWriter
 
 public abstract class FileHandler {
-    File tempOutput = null;
-    PrintWriter writer = null;
-    String filepath = null;
-    //Read States
-    String currentLine = "";
+    private File tempOutput = null;
+    private PrintWriter writer = null;
+    private String filepath = null;
+    //ReadStates
+    private Cursor cursor;
+    private String currentLine = "";
     public FileHandler(){
+        cursor = new Cursor();
     }
     public FileHandler(String filepath){
         this.filepath = filepath;
     }
+    //Getters
     protected PrintWriter getWriter(){
         return this.writer;
+    }
+    protected Cursor getCursor(){
+        return this.cursor;
     }
     /**
      * This method reads the especified file line per line
@@ -38,7 +44,8 @@ public abstract class FileHandler {
         }
         try {
             while ((currentLine=readBuffer.readLine())!=null) {
-                doPerReadedLine(currentLine);
+                cursor.advanceNewLine(currentLine);
+                doPerReadedLine(cursor);
             }
             doAtReadFinish();
         } catch (IOException error) {
@@ -80,7 +87,7 @@ public abstract class FileHandler {
      *@return void
      *@see {@link #read()}
      */
-    abstract public void doPerReadedLine(String currentLine);
+    abstract public void doPerReadedLine(Cursor cursor); 
     /**
      *Override this method for make things when a file is fully readed
      *@return void

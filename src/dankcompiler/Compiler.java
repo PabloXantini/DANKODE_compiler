@@ -7,6 +7,8 @@ import dankcompiler.messages.MessageType;
 import dankcompiler.parsing.Lexer;
 import dankcompiler.parsing.Parser;
 import dankcompiler.parsing.errors.TokenError;
+import dankcompiler.parsing.rdutils.Cursor;
+import dankcompiler.parsing.rdutils.FileHandler;
 import dankcompiler.parsing.tokens.Token;
 
 public class Compiler extends FileHandler{
@@ -52,7 +54,11 @@ public class Compiler extends FileHandler{
         }
     }
     @Override
-    public void doPerReadedLine(String currentLine) {
+    public void doPerReadedLine(Cursor cursor) {
+        while(cursor.isInLine()){
+
+        }
+        /*
         //TASK OF LEXER
         ArrayList<Token> tokens = lexer.generateTokenStream(currentLine);
         ArrayList<TokenError> errors = lexer.getCurrentErrors();
@@ -70,9 +76,12 @@ public class Compiler extends FileHandler{
             this.getWriter().flush();
         }
         this.getWriter().flush();
+        */
     }
     @Override
     public void doAtReadFinish() {
+
+        /*
         Token EOF = lexer.generateEndToken();
         ArrayList<TokenError> errors = lexer.getCurrentErrors();
         for(TokenError error : errors){
@@ -81,5 +90,6 @@ public class Compiler extends FileHandler{
         //TASK FOR PARSER
         parser.consumeToken(EOF);
         this.getWriter().close();
+        */
     }
 }
