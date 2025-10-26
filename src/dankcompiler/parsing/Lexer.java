@@ -72,11 +72,13 @@ public class Lexer{
                 token = tryGenerateToken(cursor);
             }else{
                 cursor.advanceNewLine();
+                cursor.writeln();
                 if(cursor.getLineContent()==null) {
                 	token = generateEndToken(cursor);
                 }
             }
         }
+        cursor.write(token.getSymbol());
         return token;
     }
     public Token tryGenerateToken(Cursor cursor){
@@ -128,7 +130,7 @@ public class Lexer{
             if(regex.match(lcontent, cursor.getValue())!=-1){
                 advance(regex, cursor);
                 String lexem = regex.getMatch();
-                System.out.print(lexem);
+                //System.out.print(lexem);
                 return generateToken(lexem, token, cursor.getLine(), cursor.getColumn());
             }
         }

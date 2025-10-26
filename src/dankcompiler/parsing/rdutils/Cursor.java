@@ -5,9 +5,11 @@ import java.io.IOException;
 public class Cursor {
 	private FileHandler readerContext = null;
     private int value = 0;
-    private int column = 0;
+    private int column = 1;
     private int line = 0;
     private String lcontent = "";
+    private boolean inited = false;
+    private boolean carried = false;
     public Cursor(FileHandler reader){
     	this.readerContext = reader;
     }
@@ -26,15 +28,27 @@ public class Cursor {
     public void setLineContent(String lcontent){
         this.lcontent = lcontent;
     }
-    public boolean isInLine(){
+    public void markCarry(boolean state) {
+    	this.carried = state;
+    }
+    public boolean isInLine() throws IOException{
+    	if(!inited){ 
+    		advanceNewLine();
+    		inited = true;
+    	}
         return value<lcontent.length();
+    }
+    public boolean carryLately() {
+    	return carried;
     }
     public void advanceNewLine() throws IOException{
         readerContext.nextLine();
+        this.lcontent = readerContext.getCurrentLine();
+        if(readerContext.getCurrentLine()==null) return;
+        carried = true;
     	value = 0;
         column = 1;
         line++;
-        this.lcontent = readerContext.getCurrentLine();
     }
     public void advance(int offset, int coloffset){
         this.value=offset;
@@ -46,5 +60,12 @@ public class Cursor {
     }
     public void pass(){
         this.value=lcontent.length();
+    }
+    public void writeln(){
+    	readerContext.getWriter().println();
+    	readerContext.getWriter().flush();
+    }
+    public void write(String str){
+    	readerContext.getWriter().print(str);
     }
 }

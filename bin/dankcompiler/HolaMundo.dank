@@ -6,11 +6,11 @@ papuvar_name_ = papuvar_name_ + 2;		//INCOMPATIBILIDAD ARITMÉTICA CADENA A1
 papuvar_cont_ = 0.001;				//INCOMPATIBILIDAD DE ASIGNACIÓN ENTERO B1
 papuvar_HP_1 = -100;
 papuvar_danio_epico_ = 200.5;			//ASIGNACIÓN INDEFINIDA C1
-papuvar_hechizo#1 = "abada_kadabra";		//ASIGNACION INDEFINIDA C2
+papuvar_hechizo#1 = "abada_kadabra"; Xd		//ASIGNACION INDEFINIDA C2
 papuvar_pos_x_1 = "0";				//INCOMPATIBILIDAD DE ASIGNACIÓN REAL B2
 papuvar_pos_y_1 = 0.0;
 while(papuvar_HP_1 > 0){
-	papuvar_last_time_ = papuvar_time_;	olamundo		//ASIGNACION INDEFINIDA C3
+	papuvar_last_time_ = papuvar_time_;			//ASIGNACION INDEFINIDA C3
 	papuvar_dt_ = papuvar_time_ - papuvar_last_time_; 	//ARITMÉTICA INDEFINIDA D1
 	papuvar_pos_x_1 = papuvar_pos_x_1 + 1 * papuvar_dt_;	//ARITMÉTICA INDEFINIDA D2
 	papuvar_pos_y_1 = papuvar_pos_y_1 + "2";		//INCOMPATIBILIDAD ARITMÉTICA REAL A2

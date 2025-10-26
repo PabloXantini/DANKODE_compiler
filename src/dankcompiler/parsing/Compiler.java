@@ -8,6 +8,7 @@ import dankcompiler.messages.MessageType;
 import dankcompiler.parsing.errors.TokenError;
 import dankcompiler.parsing.rdutils.Cursor;
 import dankcompiler.parsing.rdutils.FileHandler;
+import dankcompiler.parsing.tokens.Token;
 
 public class Compiler extends FileHandler {
 	private CompileMsgHandler MsgHandler;
@@ -57,8 +58,11 @@ public class Compiler extends FileHandler {
     }
 	@Override
 	public void process(Cursor cursor) throws IOException {
-		lexer.generateNextToken(cursor);
+		Token nextToken = lexer.generateNextToken(cursor);
 		attachErrors(lexer.getErrors());
 	}
-	
+	@Override
+	public void doAtReadFinish(Cursor cursor) {
+		getWriter().close();
+	}
 }

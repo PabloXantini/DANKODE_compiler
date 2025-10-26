@@ -45,11 +45,11 @@ public class FileHandler {
     //Method Stuff
     private void readEager(){
         try{
-            while ((currentLine=readBuffer.readLine())!=null) {
-                    cursor.advanceNewLine();
-                    doPerReadedLine(cursor);
-                }
-                doAtReadFinish(cursor);
+            while ((currentLine=readBuffer.readLine())!=null){
+            	cursor.advanceNewLine();
+                doPerReadedLine(cursor);
+            }
+            doAtReadFinish(cursor);
         }catch(IOException error){
             System.out.println("Error at read file: "+error);
         }
@@ -59,6 +59,7 @@ public class FileHandler {
             while (currentLine!=null){
                 process(cursor);
             }
+            doAtReadFinish(cursor);
         }catch(IOException error){
             System.out.println("Error at read file: "+error);
         }
