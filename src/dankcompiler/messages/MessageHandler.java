@@ -16,7 +16,7 @@ public class MessageHandler {
         this.typeInfo = new EnumMap<TokenErrorType, String>(TokenErrorType.class);
         this.errorMessages = new EnumMap<TokenErrorCode, String>(TokenErrorCode.class);
         switch (lang) {
-            case Language.ES:
+            case ES:
                 createESMessages();
                 break;
             default:

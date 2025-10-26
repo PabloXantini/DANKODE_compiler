@@ -1,11 +1,16 @@
 package dankcompiler.parsing.rdutils;
 
+import java.io.IOException;
+
 public class Cursor {
+	private FileHandler readerContext = null;
     private int value = 0;
     private int column = 0;
     private int line = 0;
     private String lcontent = "";
-    public Cursor(){}
+    public Cursor(FileHandler reader){
+    	this.readerContext = reader;
+    }
     public int getValue() {
         return value;
     }
@@ -24,11 +29,12 @@ public class Cursor {
     public boolean isInLine(){
         return value<lcontent.length();
     }
-    public void advanceNewLine(String lcontent){
-        value = 0;
+    public void advanceNewLine() throws IOException{
+        readerContext.nextLine();
+    	value = 0;
         column = 1;
         line++;
-        this.lcontent = lcontent;
+        this.lcontent = readerContext.getCurrentLine();
     }
     public void advance(int offset, int coloffset){
         this.value=offset;

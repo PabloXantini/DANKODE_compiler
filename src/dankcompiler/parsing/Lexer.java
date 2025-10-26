@@ -1,5 +1,6 @@
 package dankcompiler.parsing;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -31,7 +32,7 @@ public class Lexer{
     //TOKEN TABLE
     private final TokenTable TokenReference;
     //CURRENT ERRORS
-    //private final ArrayList<TokenError> ErrorStream;
+    private final ArrayList<TokenError> ErrorStream;
     private TokenError currentError;
     //Method Stuff
     private Token generateToken(String lexem, TokenType type, int line, int column){
@@ -41,24 +42,42 @@ public class Lexer{
     }
     private TokenError throwError(String lexem, int line, int column, TokenErrorCode code){
         TokenError error = CompileErrorHandler.generateError(lexem, TokenErrorType.LEXICAL, line, column, code);
-        //ErrorStream.add(error);
+        ErrorStream.add(error);
         return error;
     }
     public Lexer() {
         //Setup the token table
         TokenReference = new TokenTable();
         //TokenStream = new ArrayList<Token>();
-        //ErrorStream = new ArrayList<TokenError>();
+        ErrorStream = new ArrayList<TokenError>();
+    }
+    public ArrayList<TokenError> getErrors(){
+    	return this.ErrorStream;
     }
     public TokenError getError(){
         return this.currentError;
     }
-    public void advance(Regex regex, Cursor cursor){
+    private void advance(Regex regex, Cursor cursor){
         advance(regex, cursor, 1);
     }
-    public void advance(Regex regex, Cursor cursor, int colWeight){
+    private void advance(Regex regex, Cursor cursor, int colWeight){
         int lex_column_size = regex.getMatch().length();
         cursor.advance(regex.getEnd(), lex_column_size*colWeight);
+    }
+    public Token generateNextToken(Cursor cursor) throws IOException{
+        Token token = null;
+        ErrorStream.clear();
+        while(token==null){
+            if(cursor.isInLine()){
+                token = tryGenerateToken(cursor);
+            }else{
+                cursor.advanceNewLine();
+                if(cursor.getLineContent()==null) {
+                	token = generateEndToken(cursor);
+                }
+            }
+        }
+        return token;
     }
     public Token tryGenerateToken(Cursor cursor){
         this.currentError = null;
@@ -109,7 +128,7 @@ public class Lexer{
             if(regex.match(lcontent, cursor.getValue())!=-1){
                 advance(regex, cursor);
                 String lexem = regex.getMatch();
-                //System.out.print(lexem);
+                System.out.print(lexem);
                 return generateToken(lexem, token, cursor.getLine(), cursor.getColumn());
             }
         }

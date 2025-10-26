@@ -30,7 +30,7 @@ enum ParseMode{
     WHILE_END,
     //EXPRESSIONS
     EXPR,
-    //Term Especification
+    //Term Specification
     TERM,
 }
 
@@ -70,27 +70,27 @@ public class Parser {
     private void parse(Token token){
         ParseMode mode = context_stack.peek();
         switch (mode) {
-            case ParseMode.PROGRAM:
+            case PROGRAM:
                 parseProgram(token);
                 break;
-            case ParseMode.INSTRUCTION:
+            case INSTRUCTION:
                 parseInstructions(token);
                 break;
-            case ParseMode.ON_DECLARATION:
+            case ON_DECLARATION:
                 parseDeclaration(token);
                 break;
-            case ParseMode.ON_ASSIGNMENT:
+            case ON_ASSIGNMENT:
                 parseAssignment(token);
                 break;
-            case ParseMode.ON_WHILE_COND:
+            case ON_WHILE_COND:
                 break;
-            case ParseMode.ASSIGN_END:
+            case ASSIGN_END:
                 parseAssignEnd(token);
                 break;
-            case ParseMode.DEFINITION:
+            case DEFINITION:
                 parseDefinition(token);                
                 break;
-            case ParseMode.EXPR:
+            case EXPR:
                 parseExpression(token);
                 break;
             default:

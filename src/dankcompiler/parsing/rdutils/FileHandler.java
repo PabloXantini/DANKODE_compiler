@@ -8,49 +8,79 @@ import java.io.IOException;                 //Handle more errors
 import java.io.PrintWriter;                 //Class for handle file-writing
 import java.io.FileWriter;                  //Class for write new files with PrintWriter
 
-public abstract class FileHandler {
+public class FileHandler {
     private File tempOutput = null;
+    private BufferedReader readBuffer = null;
     private PrintWriter writer = null;
     private String filepath = null;
+    //ReadModes
+    private ReadMode read_mode = ReadMode.EAGER;
     //ReadStates
     private Cursor cursor = null;
     private String currentLine = "";
     public FileHandler(){
-        this.cursor = new Cursor();
+        this.cursor = new Cursor(this);
     }
     public FileHandler(String filepath){
-        this.cursor = new Cursor();
+        this.cursor = new Cursor(this);
         this.filepath = filepath;
     }
+    //Setters
+    public void setFilePath(String filepath) {
+    	this.filepath = filepath;
+    }
+    public void setReadMode(ReadMode mode){
+        this.read_mode = mode;
+    }
     //Getters
-    protected PrintWriter getWriter(){
+    public PrintWriter getWriter(){
         return this.writer;
     }
-    protected Cursor getCursor(){
+    public Cursor getCursor(){
         return this.cursor;
     }
+    public String getCurrentLine(){
+    	return this.currentLine;
+    }
+    //Method Stuff
+    private void readEager(){
+        try{
+            while ((currentLine=readBuffer.readLine())!=null) {
+                    cursor.advanceNewLine();
+                    doPerReadedLine(cursor);
+                }
+                doAtReadFinish(cursor);
+        }catch(IOException error){
+            System.out.println("Error at read file: "+error);
+        }
+    }
+    private void readLazy(){
+        try{
+            while (currentLine!=null){
+                process(cursor);
+            }
+        }catch(IOException error){
+            System.out.println("Error at read file: "+error);
+        }
+    }
     /**
-     * This method reads the especified file line per line
+     * This method reads the specified file line per line
      * @return void
      */
     public void read(){
         if (filepath==null) return;
-        BufferedReader readBuffer = null;
         FileReader reader = null;
+        readBuffer = null;
         try {
             reader = new FileReader(filepath);
             readBuffer = new BufferedReader(reader);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        try {
-            while ((currentLine=readBuffer.readLine())!=null) {
-                cursor.advanceNewLine(currentLine);
-                doPerReadedLine(cursor);
-            }
-            doAtReadFinish(cursor);
-        } catch (IOException error) {
-            System.out.println("Error at read file: "+error);
+        if(read_mode==ReadMode.EAGER){
+            readEager();
+        }else if(read_mode==ReadMode.LAZY){
+            readLazy();
         }
         try {
             readBuffer.close();
@@ -88,11 +118,20 @@ public abstract class FileHandler {
      *@return void
      *@see {@link #read()}
      */
-    abstract public void doPerReadedLine(Cursor cursor); 
+    public void doPerReadedLine(Cursor cursor){}
     /**
-     *Override this method for make things when a file is fully readed
+     *Override this method for make things when a file is fully read
      *@return void
      *@see {@link #read()} 
      */
-    abstract public void doAtReadFinish(Cursor cursor);
+    public void doAtReadFinish(Cursor cursor){}
+
+    public void process(Cursor cursor) throws IOException{
+        currentLine = readBuffer.readLine();
+    }
+
+    public void nextLine() throws IOException{
+        if(read_mode!=ReadMode.LAZY) return;
+        currentLine = readBuffer.readLine();
+    }
 }
