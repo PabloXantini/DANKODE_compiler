@@ -1,6 +1,6 @@
 package dankcompiler.messages;
 
-import dankcompiler.parsing.errors.TokenError;
+import dankcompiler.errors.CompileError;
 
 public class CompileMsgHandler {
     private Language default_language = Language.ES;
@@ -15,13 +15,13 @@ public class CompileMsgHandler {
     public String generateMessage(MessageType msg){
         return messages.getMessage(msg);
     }
-    public String generateErrorMessage(TokenError error){
+    public String generateErrorMessage(CompileError error){
         String output = messages.getMessagePlaceHolder(error.errorcode);
         output = String.format(output, (Object[])error.args);       
         return output;
     }
     //This is for interactive purpose
-    public String verboseTypeError(TokenError error){
+    public String verboseTypeError(CompileError error){
         return messages.getErrorTypeInfo(error.type);
     }
     public void changeMessage(MessageType msg, String new_message){

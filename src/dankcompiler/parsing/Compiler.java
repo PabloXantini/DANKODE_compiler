@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 import dankcompiler.messages.CompileMsgHandler;
 import dankcompiler.messages.MessageType;
-import dankcompiler.parsing.errors.TokenError;
+import dankcompiler.errors.CompileError;
 import dankcompiler.parsing.rdutils.Cursor;
 import dankcompiler.parsing.rdutils.FileHandler;
 
@@ -14,20 +14,20 @@ public class Compiler extends FileHandler {
 	private Lexer lexer;
 	private Parser parser;
 	//DATA OUTPUTS
-    private final ArrayList<TokenError> ErrorTable;
+    private final ArrayList<CompileError> ErrorTable;
 	public Compiler() {
 		super();
 		MsgHandler = new CompileMsgHandler();
-		ErrorTable = new ArrayList<TokenError>();
+		ErrorTable = new ArrayList<CompileError>();
 		lexer = new Lexer(this.getCursor());
 		parser = new Parser(this.lexer);
 	}
 	public Compiler(String filepath) {
 		super(filepath);
 		MsgHandler = new CompileMsgHandler();
-		ErrorTable = new ArrayList<TokenError>();
+		ErrorTable = new ArrayList<CompileError>();
 	}
-    public ArrayList<TokenError> getAllErrors(){
+    public ArrayList<CompileError> getAllErrors(){
         return ErrorTable;
     }
     public boolean thereErrors(){
@@ -40,7 +40,7 @@ public class Compiler extends FileHandler {
             return;
         }
         System.out.println(MsgHandler.generateMessage(MessageType.ERRORS_FOUND_MESSAGE));
-        for(TokenError error : ErrorTable){
+        for(CompileError error : ErrorTable){
             String message = MsgHandler.generateErrorMessage(error);
             String errTypeInfo = MsgHandler.verboseTypeError(error);
             System.out.println(
@@ -51,7 +51,7 @@ public class Compiler extends FileHandler {
                 ", Columna: "+error.column);
         }
     }
-    private void attachErrors(ArrayList<TokenError> errors) {
+    private void attachErrors(ArrayList<CompileError> errors) {
     	ErrorTable.addAll(errors);
     }
 	@Override

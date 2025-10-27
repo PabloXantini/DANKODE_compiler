@@ -1,6 +1,6 @@
-package dankcompiler.parsing.errors;
+package dankcompiler.errors;
 
-public enum TokenErrorCode {
+public enum CompileErrorCode {
     LEXEM_UNKNOWN,
     MISMATCH,
     TOKEN_MISMATCH,

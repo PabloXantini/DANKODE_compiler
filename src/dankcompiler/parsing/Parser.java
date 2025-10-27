@@ -6,10 +6,10 @@ import java.util.ArrayList;
 import dankcompiler.parsing.ast.AST;
 import dankcompiler.parsing.ast.Node;
 import dankcompiler.parsing.ast.GroupNode;
-import dankcompiler.parsing.errors.CompileErrorHandler;
-import dankcompiler.parsing.errors.TokenError;
-import dankcompiler.parsing.errors.TokenErrorCode;
-import dankcompiler.parsing.errors.TokenErrorType;
+import dankcompiler.errors.CompileErrorHandler;
+import dankcompiler.errors.CompileError;
+import dankcompiler.errors.CompileErrorCode;
+import dankcompiler.errors.CompileErrorType;
 import dankcompiler.parsing.tokens.Token;
 import dankcompiler.parsing.tokens.TokenCat;
 import dankcompiler.parsing.tokens.TokenType;
@@ -20,7 +20,7 @@ public class Parser {
     //TOKEN BACKUP
     private Token current_token;
     //ERRORS
-    private final ArrayList<TokenError> CurrentErrors;
+    private final ArrayList<CompileError> CurrentErrors;
 
     private Lexer lexerReference;
 
@@ -28,7 +28,7 @@ public class Parser {
         //INSTANCING
         GroupNode program = new GroupNode();
         this.ast = new AST(program);
-        this.CurrentErrors = new ArrayList<TokenError>();
+        this.CurrentErrors = new ArrayList<CompileError>();
         
         //INITIALIZATION
         this.lexerReference = lexer;
@@ -41,15 +41,15 @@ public class Parser {
     	this.CurrentErrors.clear();
     }
     //METHODS FOR ERROR HANDLING
-    public ArrayList<TokenError> getCurrentErrors(){
+    public ArrayList<CompileError> getCurrentErrors(){
     	return this.CurrentErrors;
     }
-    private TokenError throwError(String lexem, int line, int column, TokenErrorCode code, String... args){
-        TokenError error = CompileErrorHandler.generateError(lexem, TokenErrorType.SYNTAX, line, column, code, args);
+    private CompileError throwError(String lexem, int line, int column, CompileErrorCode code, String... args){
+        CompileError error = CompileErrorHandler.generateError(lexem, CompileErrorType.SYNTAX, line, column, code, args);
         CurrentErrors.add(error);
         return error;
     }
-    private void handleError(Token tokenHandled, TokenErrorCode code, String... args) throws IOException {
+    private void handleError(Token tokenHandled, CompileErrorCode code, String... args) throws IOException {
     	String bad_symbol = tokenHandled.getSymbol(); 
     	switch(code) {
     		case TOKEN_MISMATCH:
@@ -57,7 +57,7 @@ public class Parser {
         				bad_symbol, 
         				tokenHandled.getLine(), 
         				tokenHandled.getColumn(), 
-        				TokenErrorCode.TOKEN_MISMATCH,
+        				CompileErrorCode.TOKEN_MISMATCH,
         				bad_symbol,
         				args[0]
         				);
@@ -67,7 +67,7 @@ public class Parser {
         				bad_symbol, 
         				tokenHandled.getLine(), 
         				tokenHandled.getColumn(), 
-        				TokenErrorCode.TOKEN_MISMATCH,
+        				CompileErrorCode.TOKEN_MISMATCH,
         				bad_symbol
         				);
     			break;
@@ -82,13 +82,13 @@ public class Parser {
 				bad_symbol,
 				peekToken().getLine(),
 				peekToken().getColumn(),
-				TokenErrorCode.TOKEN_UNEXPECTED,
+				CompileErrorCode.TOKEN_UNEXPECTED,
 				bad_symbol
 				);
 		advanceToken();
     }
-    private void attachErrors(ArrayList<TokenError> errors) {
-    	for(TokenError error : errors) {
+    private void attachErrors(ArrayList<CompileError> errors) {
+    	for(CompileError error : errors) {
     		CurrentErrors.add(error);
     	}
     }
@@ -104,7 +104,7 @@ public class Parser {
     	attachErrors(lexerReference.getErrors());
     	return previous_token; 
     }
-    private Token expectToken(TokenType type, TokenErrorCode code, String... args) throws IOException {
+    private Token expectToken(TokenType type, CompileErrorCode code, String... args) throws IOException {
     	TokenType typepeeked = current_token.getType();
     	if(type==typepeeked) {
     		return advanceToken();
@@ -126,7 +126,7 @@ public class Parser {
     	GroupNode newProgram = new GroupNode();
     	System.out.println("Si se activa mas de una vez fracasamos");
     	newProgram = parseInstructions(newProgram);
-    	expectToken(TokenType.EOF, TokenErrorCode.MISMATCH, "EOF");
+    	expectToken(TokenType.EOF, CompileErrorCode.MISMATCH, "EOF");
     	return newProgram;
     }
     //INSTRUCTIONS: Instructions -> () | (Instruction)(Instructions)
@@ -183,7 +183,7 @@ public class Parser {
     		//FIRST(Instruction) 
     		case ID:
     			node = parseAssignment();
-    			expectToken(TokenType.SEMICOLON, TokenErrorCode.TOKEN_MISMATCH,";");
+    			expectToken(TokenType.SEMICOLON, CompileErrorCode.TOKEN_MISMATCH,";");
     			break;
     		case WHILE:
     			parseWhile();
@@ -198,7 +198,7 @@ public class Parser {
     //STATEMENTS: Statement -> (StatementBody)[;]
     private Node parseStatement(GroupNode supernode) throws IOException {
     	Node node = parseStatementBody(supernode);
-    	expectToken(TokenType.SEMICOLON, TokenErrorCode.TOKEN_MISMATCH,";");
+    	expectToken(TokenType.SEMICOLON, CompileErrorCode.TOKEN_MISMATCH,";");
     	return node;
     }
     //STATEMENTBODY: StatementBody -> () | (Declaration) | (Assignment)
@@ -250,7 +250,7 @@ public class Parser {
     }
     //DEFINTION: Definition -> [ID](DefinitionAssignment)
     private Assignment parseDefinition() throws IOException { 
-    	Token ID = expectToken(TokenType.ID, TokenErrorCode.ID_UNEXPECTED);
+    	Token ID = expectToken(TokenType.ID, CompileErrorCode.ID_UNEXPECTED);
     	Expression expr = (Expression)parseDefinitionAssignment();
     	if(expr!=null) {
     		Assignment node = new Assignment();
@@ -295,8 +295,8 @@ public class Parser {
     }
     //ASSIGNMENT: Assignment -> [ID][=](Expression)
     private Assignment parseAssignment() throws IOException {
-    	Token ID = expectToken(TokenType.ID, TokenErrorCode.ID_UNEXPECTED);
-    	expectToken(TokenType.ASSIGN, TokenErrorCode.TOKEN_MISMATCH, "=");
+    	Token ID = expectToken(TokenType.ID, CompileErrorCode.ID_UNEXPECTED);
+    	expectToken(TokenType.ASSIGN, CompileErrorCode.TOKEN_MISMATCH, "=");
     	//Variable
     	Variable var = new Variable(ID.getSymbol());
     	//Expression
@@ -340,16 +340,16 @@ public class Parser {
     //BLOCK: Group-> [{](Instructions)[}]
     private GroupNode parseBlock() throws IOException {
     	GroupNode block = new GroupNode();
-    	expectToken(TokenType.LB, TokenErrorCode.TOKEN_MISMATCH, "{");
+    	expectToken(TokenType.LB, CompileErrorCode.TOKEN_MISMATCH, "{");
     	block = parseInstructions(block);
-    	expectToken(TokenType.RB, TokenErrorCode.TOKEN_MISMATCH, "}");
+    	expectToken(TokenType.RB, CompileErrorCode.TOKEN_MISMATCH, "}");
     	return block;
     }
     //GROUP: Group-> [(](Expression)[)]
     private Expression parseGroup() throws IOException {
-    	expectToken(TokenType.LP, TokenErrorCode.TOKEN_MISMATCH, "(");
+    	expectToken(TokenType.LP, CompileErrorCode.TOKEN_MISMATCH, "(");
     	Expression expr = parseExpression(parseMinorExpression(), 0);
-    	expectToken(TokenType.RP, TokenErrorCode.TOKEN_MISMATCH, ")");
+    	expectToken(TokenType.RP, CompileErrorCode.TOKEN_MISMATCH, ")");
     	return expr;
     }
     //IMPLEMENTATION OF PRECEDENCE CLIMBING

@@ -2,19 +2,19 @@ package dankcompiler.messages;
 
 import java.util.EnumMap;
 
-import dankcompiler.parsing.errors.TokenErrorCode;
-import dankcompiler.parsing.errors.TokenErrorType;
+import dankcompiler.errors.CompileErrorCode;
+import dankcompiler.errors.CompileErrorType;
 
 public class MessageHandler {
     private final Language lang;
     private final EnumMap<MessageType, String> messages;
-    private final EnumMap<TokenErrorCode, String> errorMessages;
-    private final EnumMap<TokenErrorType, String> typeInfo;
+    private final EnumMap<CompileErrorCode, String> errorMessages;
+    private final EnumMap<CompileErrorType, String> typeInfo;
     public MessageHandler(Language lang){
         this.lang = lang;
         this.messages = new EnumMap<MessageType, String>(MessageType.class);
-        this.typeInfo = new EnumMap<TokenErrorType, String>(TokenErrorType.class);
-        this.errorMessages = new EnumMap<TokenErrorCode, String>(TokenErrorCode.class);
+        this.typeInfo = new EnumMap<CompileErrorType, String>(CompileErrorType.class);
+        this.errorMessages = new EnumMap<CompileErrorCode, String>(CompileErrorCode.class);
         switch (lang) {
             case ES:
                 createESMessages();
@@ -32,10 +32,10 @@ public class MessageHandler {
     public String getMessage(MessageType msgcode){
         return messages.get(msgcode);
     }
-    public String getMessagePlaceHolder(TokenErrorCode errorcode){
+    public String getMessagePlaceHolder(CompileErrorCode errorcode){
         return errorMessages.get(errorcode);
     }
-    public String getErrorTypeInfo(TokenErrorType type){
+    public String getErrorTypeInfo(CompileErrorType type){
         return typeInfo.get(type);
     }
     private void createESMessages(){
@@ -43,14 +43,14 @@ public class MessageHandler {
         messages.put(MessageType.ERRORS_FOUND_MESSAGE, "Se encontraron errores:");
         messages.put(MessageType.ERRORS_NOT_FOUND_MESSAGE, "No se encontraron errores.");
         //Phases
-        typeInfo.put(TokenErrorType.LEXICAL, "Análisis Léxico");
-        typeInfo.put(TokenErrorType.SYNTAX, "Análisis Sintáctico");
-        typeInfo.put(TokenErrorType.SEMANT, "Análisis Semántico");
+        typeInfo.put(CompileErrorType.LEXICAL, "Análisis Léxico");
+        typeInfo.put(CompileErrorType.SYNTAX, "Análisis Sintáctico");
+        typeInfo.put(CompileErrorType.SEMANT, "Análisis Semántico");
         //Messages
-        errorMessages.put(TokenErrorCode.LEXEM_UNKNOWN, "Lexema desconocido: %s");
-        errorMessages.put(TokenErrorCode.MISMATCH, "Se esperaba: %s");
-        errorMessages.put(TokenErrorCode.TOKEN_MISMATCH, "(%s) Se esperaba: %s");
-        errorMessages.put(TokenErrorCode.TOKEN_UNEXPECTED, "Token inesperado: %s");
-        errorMessages.put(TokenErrorCode.ID_UNEXPECTED, "Identificador inesperado: %s");
+        errorMessages.put(CompileErrorCode.LEXEM_UNKNOWN, "Lexema desconocido: %s");
+        errorMessages.put(CompileErrorCode.MISMATCH, "Se esperaba: %s");
+        errorMessages.put(CompileErrorCode.TOKEN_MISMATCH, "(%s) Se esperaba: %s");
+        errorMessages.put(CompileErrorCode.TOKEN_UNEXPECTED, "Token inesperado: %s");
+        errorMessages.put(CompileErrorCode.ID_UNEXPECTED, "Identificador inesperado: %s");
     }
 }

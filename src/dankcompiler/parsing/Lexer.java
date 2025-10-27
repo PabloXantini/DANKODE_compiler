@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
 
-import dankcompiler.parsing.errors.CompileErrorHandler;
-import dankcompiler.parsing.errors.TokenError;
-import dankcompiler.parsing.errors.TokenErrorCode;
-import dankcompiler.parsing.errors.TokenErrorType;
+import dankcompiler.errors.CompileErrorHandler;
+import dankcompiler.errors.CompileError;
+import dankcompiler.errors.CompileErrorCode;
+import dankcompiler.errors.CompileErrorType;
 import dankcompiler.parsing.rdutils.Cursor;
 import dankcompiler.parsing.tokens.Regex;
 import dankcompiler.parsing.tokens.Token;
@@ -32,8 +32,8 @@ public class Lexer{
     //TOKEN TABLE
     private final TokenTable TokenReference;
     //CURRENT ERRORS
-    private final ArrayList<TokenError> ErrorStream;
-    private TokenError currentError;
+    private final ArrayList<CompileError> ErrorStream;
+    private CompileError currentError;
     //Cursor Used
 	private Cursor cursorReference = null;
     //Method Stuff
@@ -42,8 +42,8 @@ public class Lexer{
         //TokenStream.add(token);
         return token;
     }
-    private TokenError throwError(String lexem, int line, int column, TokenErrorCode code, String... args){
-        TokenError error = CompileErrorHandler.generateError(lexem, TokenErrorType.LEXICAL, line, column, code, args);
+    private CompileError throwError(String lexem, int line, int column, CompileErrorCode code, String... args){
+        CompileError error = CompileErrorHandler.generateError(lexem, CompileErrorType.LEXICAL, line, column, code, args);
         ErrorStream.add(error);
         return error;
     }
@@ -51,13 +51,13 @@ public class Lexer{
         //Setup the token table
         TokenReference = new TokenTable();
         //TokenStream = new ArrayList<Token>();
-        ErrorStream = new ArrayList<TokenError>();
+        ErrorStream = new ArrayList<CompileError>();
         cursorReference = cursor;
     }
-    public ArrayList<TokenError> getErrors(){
+    public ArrayList<CompileError> getErrors(){
     	return this.ErrorStream;
     }
-    public TokenError getError(){
+    public CompileError getError(){
         return this.currentError;
     }
     private void advance(Regex regex, Cursor cursor){
@@ -148,7 +148,7 @@ public class Lexer{
         		lexem, 
         		cursor.getLine(), 
         		cursor.getColumn(), 
-        		TokenErrorCode.LEXEM_UNKNOWN, 
+        		CompileErrorCode.LEXEM_UNKNOWN, 
         		lexem
         		);
         cursor.next();
@@ -162,7 +162,7 @@ public class Lexer{
             		null, 
             		c_block_lstart, 
             		c_block_cstart, 
-            		TokenErrorCode.MISMATCH, 
+            		CompileErrorCode.MISMATCH, 
             		"*/");
         }
         return final_token;
