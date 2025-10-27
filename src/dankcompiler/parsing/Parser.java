@@ -46,14 +46,14 @@ public class Parser {
     //==================================================
     //private int context_level = 0;
     //Value Token Backup
-    private Token previous_token;
+    //private Token previous_token;
     private Lexer lexerReference;
     //Node Backup
-    private Stack<ParseMode> context_stack;
-    private Stack<Node> branch_stack;
+    //private Stack<ParseMode> context_stack;
+    //private Stack<Node> branch_stack;
     //Expression Backup
-    private int exp_pointer = 0;
-    private Stack<Token> expression_stack;
+    //private int exp_pointer = 0;
+    //private Stack<Token> expression_stack;
     //private static final int MAX_PRECEDENCE = 7;
     //private int precedence_level = MAX_PRECEDENCE;
 
@@ -63,14 +63,15 @@ public class Parser {
         this.ast = new AST(program);
         this.CurrentErrors = new ArrayList<TokenError>();
         
-        this.context_stack = new Stack<ParseMode>();
-        this.branch_stack = new Stack<Node>();
-        this.expression_stack = new Stack<Token>();
+        //this.context_stack = new Stack<ParseMode>();
+        //this.branch_stack = new Stack<Node>();
+        //this.expression_stack = new Stack<Token>();
+        
         //INITIALIZATION
         this.lexerReference = lexer;
         
-        this.context_stack.push(ParseMode.PROGRAM);
-        this.branch_stack.push(program);
+        //this.context_stack.push(ParseMode.PROGRAM);
+        //this.branch_stack.push(program);
     }
     public AST getAST(){
         return this.ast;
@@ -87,7 +88,7 @@ public class Parser {
         CurrentErrors.add(error);
         return error;
     }
-    private void handleError(Token tokenHandled, TokenErrorCode code, String... args) {
+    private void handleError(Token tokenHandled, TokenErrorCode code, String... args) throws IOException {
     	String bad_symbol = tokenHandled.getSymbol(); 
     	switch(code) {
     		case TOKEN_MISMATCH:
@@ -112,6 +113,7 @@ public class Parser {
     		default:
     			break;
     	}
+    	advanceToken();
     }
     private void handleUnexpectedToken() throws IOException{
     	String bad_symbol = peekToken().getSymbol();
@@ -130,37 +132,37 @@ public class Parser {
     	}
     }
     //METHODS FOR MAIN PARSING
-    private ParseMode peekContext() {
-    	return this.context_stack.peek();
-    }
-    private Token peekToken(){
+    private Token peekToken() throws IOException{
+    	if(current_token==null) current_token = lexerReference.generateNextToken();
     	return current_token;
     }
     private Token advanceToken() throws IOException{
-    	current_token=lexerReference.generateNextToken();
+    	Token previous_token = current_token;
+    	if(previous_token.getType()==TokenType.EOF) return previous_token;
+    	current_token = lexerReference.generateNextToken();
     	attachErrors(lexerReference.getErrors());
-    	return current_token; 
+    	return previous_token; 
     }
     private void expectToken(TokenType type, TokenErrorCode code, String... args) throws IOException {
     	TokenType typepeeked = current_token.getType();
     	if(type==typepeeked) {
-    		if(type!=TokenType.EOF) advanceToken();
+    		advanceToken();
     	}else {
     		Token tokenMismatched = peekToken();
     		handleError(tokenMismatched, code, args);    		
     	}
     }
-    private void passToken(TokenType type) throws IOException {
-    	if(type!=TokenType.EOF) advanceToken();
+    private void passToken() throws IOException {
+    	advanceToken();
     }
     //LL(1) MAIN PARSING
     public void parse() throws IOException{
-    	advanceToken();
     	this.ast.setRoot(parseProgram());
     }
     //PROGRAM: Program -> (Instructions)[EOF]
     private GroupNode parseProgram() throws IOException {
     	GroupNode newProgram = null;
+    	System.out.println("Si se activa mas de una vez fracasamos");
     	parseInstructions();
     	expectToken(TokenType.EOF, TokenErrorCode.MISMATCH, "EOF");
     	return null;
@@ -173,12 +175,14 @@ public class Parser {
     		case NUMMY, NUMPT, CHARA: 
     		case ID:
     		case WHILE:
+    		case SEMICOLON:
     			parseInstruction();
     			parseInstructions();
     			break;
-    		case EOF:
+    		case RB, EOF:
     			break;
     		default:
+    			System.out.println("Hola? Habla Instructions");
     			handleUnexpectedToken();
     			break;
     	}
@@ -194,9 +198,13 @@ public class Parser {
     			parseStatement();
     			break;
     		case WHILE:
-    			passToken(type);
+    			parseWhile();
+    			break;
+    		case SEMICOLON:
+    			advanceToken();
     			break;
     		default:
+    			System.out.println("Hola? Habla Instruction");
     			handleUnexpectedToken();
     			break;
     	}
@@ -222,6 +230,7 @@ public class Parser {
     		case SEMICOLON:
     			break;
     		default:
+    			System.out.println("Hola? Habla StmntBody");
     			handleUnexpectedToken();
     			break;
     	}
@@ -238,9 +247,10 @@ public class Parser {
     	TokenType type = peekToken().getType();
     	switch(type) {
     		case NUMMY, NUMPT, CHARA:
-    			passToken(type);
+    			advanceToken();
     			break;
     		default:
+    			System.out.println("Hola? Habla DataType");
     			handleUnexpectedToken();
     			break;
     	}
@@ -260,50 +270,146 @@ public class Parser {
     	TokenType type = peekToken().getType();
     	switch(type) {
     		case COMMA:
-    			passToken(type);
+    			advanceToken();
     			parseDefinitions();
     			break;
     		case SEMICOLON:
     			break;
     		default:
+    			System.out.println("Hola? Habla Definitions");
     			handleUnexpectedToken();
     			break;
     	}
     }
-    //DEFINITION IN ASSIGNMENT: DefinitionAssignment -> () | [=](Expr)
+    //DEFINITION IN ASSIGNMENT: DefinitionAssignment -> () | [=](Expression)
     private void parseDefinitionAssignment() throws IOException {
     	TokenType type = peekToken().getType();
     	switch(type) {
     		case ASSIGN:
-    			passToken(type);
+    			advanceToken();
     			//Expression
+    			parseExpression(parseMinorExpression(), 0);
     			break;
-    		case SEMICOLON:
+    		case COMMA, SEMICOLON:
     			break;
     		default:
+    			System.out.println("Hola? Habla DefinitionAssignment");
     			handleUnexpectedToken();
     			break;
     	}
     }
-    //ASSIGNMENT: Assignment -> [ID][=](Expr)
+    //ASSIGNMENT: Assignment -> [ID][=](Expression)
     private void parseAssignment() throws IOException {
     	expectToken(TokenType.ID, TokenErrorCode.ID_UNEXPECTED);
     	expectToken(TokenType.ASSIGN, TokenErrorCode.TOKEN_MISMATCH, "=");
     	//Expression
+    	parseExpression(parseMinorExpression(), 0);
     }
-    
-    //METHODS FOR EXPRESSION PARSING
-    private Token peekExpArg(){
-        return this.exp_pointer < expression_stack.size() ? expression_stack.get(this.exp_pointer) : null;
+    //WHILE: WHILE -> [while](Group)(Body)
+    private void parseWhile() throws IOException {
+    	advanceToken();
+    	parseGroup();
+    	parseBody();
     }
-    private Token advanceExpArg(){
-        if(this.exp_pointer >= expression_stack.size()) return null;
-        Token token = expression_stack.get(this.exp_pointer);
-        this.exp_pointer++;
-        return token;
+    //BODY: Body -> (Instruction) | 
+    private void parseBody() throws IOException {
+    	TokenType type = peekToken().getType();
+    	switch(type) {
+    		//FIRST(BODY)
+    		case NUMMY, NUMPT, CHARA:
+    		case ID:
+    		case WHILE:
+    			parseInstruction();
+    			break;
+    		case LB:
+    			parseBlock();
+    			break;
+    		default:
+    			System.out.println("Hola? Habla body");
+    			handleUnexpectedToken();
+    			break;
+    	}
+    }
+    //BLOCK: Group-> [{](Instructions)[}]
+    private void parseBlock() throws IOException {
+    	expectToken(TokenType.LB, TokenErrorCode.TOKEN_MISMATCH, "{");
+    	parseInstructions();
+    	expectToken(TokenType.RB, TokenErrorCode.TOKEN_MISMATCH, "}");
+    }
+    //GROUP: Group-> [(](Expression)[)]
+    private Expression parseGroup() throws IOException {
+    	expectToken(TokenType.LP, TokenErrorCode.TOKEN_MISMATCH, "(");
+    	Expression expr = parseExpression(parseMinorExpression(), 0);
+    	expectToken(TokenType.RP, TokenErrorCode.TOKEN_MISMATCH, ")");
+    	return expr;
     }
     //IMPLEMENTATION OF PRECEDENCE CLIMBING
-
+    private Expression parseExpression(Expression left, int min_precedence) throws IOException {
+    	Token op = null;
+    	Expression right = null;
+    	//peek
+    	Token Look_A_Head = peekToken();
+    	while(Look_A_Head!=null && !isUnary(Look_A_Head) && getPrecedence(Look_A_Head.getType()) >= min_precedence) {
+    		int op_precedence = getPrecedence(Look_A_Head.getType());
+    		//advance
+    		op = Look_A_Head; 
+    		advanceToken();
+    		//RIGHT
+    		right = parseMinorExpression();
+    		//peek
+    		Look_A_Head = peekToken();
+    		while(Look_A_Head!=null && !isUnary(Look_A_Head) && getPrecedence(Look_A_Head.getType()) > op_precedence) {
+    			//RIGHT
+    			right = parseExpression(right, op_precedence+1);
+    			//peek
+    			Look_A_Head = peekToken();
+    		}
+    		BinaryOp node = new BinaryOp(op.getType());
+    		node.setLeftTerm(left);
+    		node.setRightTerm(right);
+    		left = node;
+    	}
+    	return left;
+    }
+    //parsePrimary
+    //MINOR EXPRESSION: MinorExpression -> (Term) | (U_OP)(Term)
+    //TERMS: Term -> (Group) | [ID] | (Constant)
+    //CONSTANTS: Constant -> [cint] | [cfloat] | [cstring]
+    //GROUP: [(](Expression)[)]
+    private Expression parseMinorExpression() throws IOException {
+    	Token token_peeked = peekToken();
+    	TokenType type = token_peeked.getType();
+    	switch(type) {
+    		case PLUS, MINUS:
+    			passToken();
+    			UnaryOp u_node = new UnaryOp(type);
+    			Expression expr = parseMinorExpression();
+    			u_node.setTerm(expr);
+    			return u_node;
+    		case ID:
+    			passToken();
+    			return new Variable(token_peeked.getSymbol());
+    		case CINT, CFLOAT, CSTRING:
+    			passToken();
+    			return new Constant(token_peeked.getSymbol());
+    		case LP:
+    			return parseGroup();
+    		default:
+    			System.out.println("Hola? Habla group");
+    			handleUnexpectedToken();
+    			return null;
+    	}
+    }
+    private boolean isUnary(Token token){
+        if(token==null) return false;
+        TokenType type = token.getType();
+        TokenCat cat = token.getCategory();
+        if(getPrecedence(type)>0 && cat==TokenCat.OPERATOR){
+            return false;
+        }else{
+            return true;
+        }
+    }
     private int getPrecedence(TokenType type){
         switch (type) {
             case OR: return 6;
@@ -315,8 +421,6 @@ public class Parser {
             default: return 0;//UNARIO-TERM
         }
     }
-    //Method Stuff
-
 }
 //STATEMENTS
 class Declaration extends Node{
