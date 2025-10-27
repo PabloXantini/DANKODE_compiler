@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import dankcompiler.parsing.ast.AST;
 import dankcompiler.parsing.ast.Node;
+import dankcompiler.parsing.ast.nodes.*;
 import dankcompiler.parsing.ast.GroupNode;
 import dankcompiler.errors.CompileErrorHandler;
 import dankcompiler.errors.CompileError;
@@ -15,21 +16,18 @@ import dankcompiler.parsing.tokens.TokenCat;
 import dankcompiler.parsing.tokens.TokenType;
 
 public class Parser {
+	private Lexer lexerReference;
     //OUTPUT
     private AST ast;
     //TOKEN BACKUP
     private Token current_token;
     //ERRORS
     private final ArrayList<CompileError> CurrentErrors;
-
-    private Lexer lexerReference;
-
     public Parser(Lexer lexer){
         //INSTANCING
         GroupNode program = new GroupNode();
         this.ast = new AST(program);
-        this.CurrentErrors = new ArrayList<CompileError>();
-        
+        this.CurrentErrors = new ArrayList<CompileError>();     
         //INITIALIZATION
         this.lexerReference = lexer;
         
@@ -114,17 +112,14 @@ public class Parser {
     		return tokenMismatched;
     	}
     }
-    private void passToken() throws IOException {
-    	advanceToken();
-    }
     //LL(1) MAIN PARSING
     public void parse() throws IOException{
     	this.ast.setRoot(parseProgram());
     }
     //PROGRAM: Program -> (Instructions)[EOF]
     private GroupNode parseProgram() throws IOException {
+    	System.out.println("LOG: Parsing file once ...");
     	GroupNode newProgram = new GroupNode();
-    	System.out.println("Si se activa mas de una vez fracasamos");
     	newProgram = parseInstructions(newProgram);
     	expectToken(TokenType.EOF, CompileErrorCode.MISMATCH, "EOF");
     	return newProgram;
@@ -146,7 +141,6 @@ public class Parser {
     		case RB, EOF:
     			break;
     		default:
-    			System.out.println("Hola? Habla Instructions");
     			handleUnexpectedToken();
     			break;
     	}
@@ -169,7 +163,6 @@ public class Parser {
     			advanceToken();
     			break;
     		default:
-    			System.out.println("Hola? Habla Instruction");
     			handleUnexpectedToken();
     			break;
     	}
@@ -189,7 +182,6 @@ public class Parser {
     			parseWhile();
     			break;
     		default:
-    			System.out.println("Hola? Habla Instruction");
     			handleUnexpectedToken();
     			break;
     	}
@@ -216,7 +208,6 @@ public class Parser {
     		case SEMICOLON:
     			break;
     		default:
-    			System.out.println("Hola? Habla StmntBody");
     			handleUnexpectedToken();
     			break;
     	}
@@ -224,37 +215,38 @@ public class Parser {
     }
     //DECLARATION: Declaration -> (Type)(Definitions)
     private void parseDeclaration(GroupNode supernode) throws IOException {
-    	parseDataType();
-    	parseDefinitions(supernode);
+    	TokenType type = parseDataType();
+    	parseDefinitions(supernode, type);
     }
     //DATATYPES KEYWORD: (Type) -> [NUMMY] | [NUMPT] | [CHARA]
-    private void parseDataType() throws IOException {
+    private TokenType parseDataType() throws IOException {
     	TokenType type = peekToken().getType();
     	switch(type) {
     		case NUMMY, NUMPT, CHARA:
     			advanceToken();
-    			break;
+    			return type;
     		default:
-    			System.out.println("Hola? Habla DataType");
     			handleUnexpectedToken();
-    			break;
+    			return type;
     	}
     }
     //DEFINITIONS: Definitions -> (Definition)(MoreDefinitions)
-    private Node parseDefinitions(GroupNode supernode) throws IOException {
+    private Node parseDefinitions(GroupNode supernode, TokenType data_type) throws IOException {
     	Node node = null;
-    	node = parseDefinition();
+    	node = parseDefinition(supernode, data_type);
     	if(node!=null) supernode.appendNode(node);
-    	parseMoreDefinitions(supernode);
+    	parseMoreDefinitions(supernode, data_type);
     	return node;
     }
     //DEFINTION: Definition -> [ID](DefinitionAssignment)
-    private Assignment parseDefinition() throws IOException { 
+    private Assignment parseDefinition(GroupNode supernode, TokenType data_type) throws IOException { 
     	Token ID = expectToken(TokenType.ID, CompileErrorCode.ID_UNEXPECTED);
+    	Variable var = new Variable(ID.getSymbol());
+    	Declaration dec_node = new Declaration(data_type, var);
+    	supernode.appendNode(dec_node);
     	Expression expr = (Expression)parseDefinitionAssignment();
     	if(expr!=null) {
-    		Assignment node = new Assignment();
-    		Variable var = new Variable(ID.getSymbol());
+    		Assignment node = new Assignment();	
     		node.setVariable(var);
     		node.setExpression(expr);
     		return node;
@@ -262,17 +254,16 @@ public class Parser {
     	return null;
     }
     //MORE_DEFINITIONS: MoreDefinitions -> () | [,](Definitions)
-    private void parseMoreDefinitions(GroupNode supernode) throws IOException{
+    private void parseMoreDefinitions(GroupNode supernode, TokenType data_type) throws IOException{
     	TokenType type = peekToken().getType();
     	switch(type) {
     		case COMMA:
     			advanceToken();
-    			parseDefinitions(supernode);
+    			parseDefinitions(supernode, data_type);
     			break;
     		case SEMICOLON:
     			break;
     		default:
-    			System.out.println("Hola? Habla Definitions");
     			handleUnexpectedToken();
     			break;
     	}
@@ -288,7 +279,6 @@ public class Parser {
     		case COMMA, SEMICOLON:
     			return null;
     		default:
-    			System.out.println("Hola? Habla DefinitionAssignment");
     			handleUnexpectedToken();
     			return null;
     	}
@@ -331,7 +321,6 @@ public class Parser {
     			node = parseBlock();
     			break;
     		default:
-    			System.out.println("Hola? Habla body");
     			handleUnexpectedToken();
     			break;
     	}
@@ -391,21 +380,20 @@ public class Parser {
     	TokenType type = token_peeked.getType();
     	switch(type) {
     		case PLUS, MINUS:
-    			passToken();
+    			advanceToken();
     			UnaryOp u_node = new UnaryOp(type);
     			Expression expr = parseMinorExpression();
     			u_node.setTerm(expr);
     			return u_node;
     		case ID:
-    			passToken();
+    			advanceToken();
     			return new Variable(token_peeked.getSymbol());
     		case CINT, CFLOAT, CSTRING:
-    			passToken();
+    			advanceToken();
     			return new Constant(token_peeked.getSymbol());
     		case LP:
     			return parseGroup();
     		default:
-    			System.out.println("Hola? Habla group");
     			handleUnexpectedToken();
     			return null;
     	}
@@ -430,181 +418,5 @@ public class Parser {
             case MUL, DIV, MOD: return 5;        
             default: return -1;//UNARIO-TERM
         }
-    }
-}
-//STATEMENTS
-class Declaration extends Node{
-    public Declaration() {
-    }
-}
-class Assignment extends Node {
-    private Variable var;
-    private Expression expr;
-    public Assignment(){}
-    public Assignment(Variable var){
-        this.var = var;
-    }
-    public Variable getVariable(){
-        return this.var;
-    }
-    public Expression getExpression(){
-        return this.expr;
-    }
-    public void setVariable(Variable var){
-        this.var = var;
-    }
-    public void setExpression(Expression expr){
-        this.expr = expr;
-    }
-}
-//INSTRUCTIONS
-class If extends Node {
-    private Expression Cond;
-    private Node thenBody;
-    private Node elseBody; 
-    public If(){}
-    public Expression getCond() {
-        return Cond;
-    }
-    public void setCond(Expression cond) {
-        this.Cond = cond;
-    }
-    public Node getThenBody() {
-        return thenBody;
-    }
-    public void setThenBody(Node thenBody) {
-        this.thenBody = thenBody;
-    }
-    public Node getElseBody() {
-        return elseBody;
-    }
-    public void setElseBody(Node elseBody) {
-        this.elseBody = elseBody;
-    }
-}
-class While extends Node {
-    private Expression atCond;
-    private Node loopBody;
-    public While(){}
-    public Expression getAtCondition() {
-        return atCond;
-    }
-    public void setAtCondition(Expression atCond) {
-        this.atCond = atCond;
-    }
-    public Node getLoopBody() {
-        return loopBody;
-    }
-    public void setLoopBody(Node loopBody) {
-        this.loopBody = loopBody;
-    }
-}
-class DoWhile extends Node {
-    private Expression thenCond;
-    private Node loopBody;
-    public DoWhile(){}
-    public Expression getThenCondition() {
-        return thenCond;
-    }
-    public Node getLoopBody() {
-        return loopBody;
-    }
-    public void setThenCondition(Expression thenCond) {
-        this.thenCond = thenCond;
-    }
-    public void setLoopBody(Node loopBody) {
-        this.loopBody = loopBody;
-    }
-}
-class For extends Node {
-    private Declaration decInit;
-    private Assignment Init;
-    private Expression Cond;
-    private Expression Action;
-    private Node loopBody;
-    public For(){}
-    public Declaration getDeclarationInit() {
-        return decInit;
-    }
-    public Assignment getInit() {
-        return Init;
-    }
-    public Expression getCondition() {
-        return Cond;
-    }
-    public Expression getAction() {
-        return Action;
-    }
-    public Node getLoopBody() {
-        return loopBody;
-    }
-    public void setDecInit(Declaration decInit) {
-        this.decInit = decInit;
-    }
-    public void setInit(Assignment init) {
-        Init = init;
-    }
-    public void setCondition(Expression cond) {
-        Cond = cond;
-    }
-    public void setAction(Expression action) {
-        Action = action;
-    }
-    public void setLoopBody(Node loopBody) {
-        this.loopBody = loopBody;
-    }
-}
-//EXPRESSIONS
-class Expression extends Node {
-    public Expression(){}
-}
-class BinaryOp extends Expression {
-    private final TokenType op;
-    private Expression left_term;
-    private Expression right_term;
-    public BinaryOp(TokenType op){
-        this.op = op;
-    }
-    public TokenType getOp(){
-        return this.op;
-    }
-    public Expression getLeftTerm(){
-        return this.left_term;
-    }
-    public Expression getRightTerm(){
-        return this.right_term;
-    }
-    public void setLeftTerm(Expression left) {
-        this.left_term = left;
-    }
-    public void setRightTerm(Expression right) {
-        this.right_term = right;
-    }  
-}
-class UnaryOp extends Expression {
-    private final TokenType op;
-    private Expression term;
-    public UnaryOp(TokenType op){
-        this.op = op;
-    }
-    public TokenType getOp(){
-        return this.op;
-    }
-    public Expression getTerm(){
-        return this.term;
-    }
-    public void setTerm(Expression term){
-        this.term = term;
-    }
-}
-class Variable extends Expression {
-    public Variable(){}
-    public Variable(String value){
-        this.value = value;
-    }
-}
-class Constant extends Expression {
-    public Constant(String value){
-        this.value = value;
     }
 }
