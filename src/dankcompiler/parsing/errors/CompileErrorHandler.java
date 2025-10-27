@@ -12,8 +12,8 @@ public class CompileErrorHandler {
         errornum++;
         return new_code;
     }
-    public static TokenError generateError(String lexem, TokenErrorType type, int line, int column, TokenErrorCode errorcode){
+    public static TokenError generateError(String lexem, TokenErrorType type, int line, int column, TokenErrorCode errorcode, String... args){
         long codetoken = generateCode(type, errorcode);
-        return new TokenError(codetoken, type, lexem, line, column, errorcode);
+        return new TokenError(codetoken, type, lexem, line, column, errorcode, args);
     }
 }

@@ -34,22 +34,25 @@ public class Lexer{
     //CURRENT ERRORS
     private final ArrayList<TokenError> ErrorStream;
     private TokenError currentError;
+    //Cursor Used
+	private Cursor cursorReference = null;
     //Method Stuff
     private Token generateToken(String lexem, TokenType type, int line, int column){
         Token token = new Token(lexem, type, TokenReference.getCategorie(type), line, column);
         //TokenStream.add(token);
         return token;
     }
-    private TokenError throwError(String lexem, int line, int column, TokenErrorCode code){
-        TokenError error = CompileErrorHandler.generateError(lexem, TokenErrorType.LEXICAL, line, column, code);
+    private TokenError throwError(String lexem, int line, int column, TokenErrorCode code, String... args){
+        TokenError error = CompileErrorHandler.generateError(lexem, TokenErrorType.LEXICAL, line, column, code, args);
         ErrorStream.add(error);
         return error;
     }
-    public Lexer() {
+    public Lexer(Cursor cursor) {
         //Setup the token table
         TokenReference = new TokenTable();
         //TokenStream = new ArrayList<Token>();
         ErrorStream = new ArrayList<TokenError>();
+        cursorReference = cursor;
     }
     public ArrayList<TokenError> getErrors(){
     	return this.ErrorStream;
@@ -64,21 +67,21 @@ public class Lexer{
         int lex_column_size = regex.getMatch().length();
         cursor.advance(regex.getEnd(), lex_column_size*colWeight);
     }
-    public Token generateNextToken(Cursor cursor) throws IOException{
+    public Token generateNextToken() throws IOException{
         Token token = null;
         ErrorStream.clear();
         while(token==null){
-            if(cursor.isInLine()){
-                token = tryGenerateToken(cursor);
+            if(cursorReference.isInLine()){
+                token = tryGenerateToken(cursorReference);
             }else{
-                cursor.advanceNewLine();
-                cursor.writeln();
-                if(cursor.getLineContent()==null) {
-                	token = generateEndToken(cursor);
+                cursorReference.advanceNewLine();
+                cursorReference.writeln();
+                if(cursorReference.getLineContent()==null) {
+                	token = generateEndToken(cursorReference);
                 }
             }
         }
-        cursor.write(token.getSymbol());
+        cursorReference.write(token.getSymbol());
         return token;
     }
     public Token tryGenerateToken(Cursor cursor){
@@ -141,7 +144,13 @@ public class Lexer{
         char unknown_lexem = lcontent.charAt(cursor.getValue());
         String lexem = String.valueOf(unknown_lexem);
         //Throw error
-        currentError = throwError(lexem, cursor.getLine(), cursor.getColumn(), TokenErrorCode.LEXEM_UNKNOWN);
+        currentError = throwError(
+        		lexem, 
+        		cursor.getLine(), 
+        		cursor.getColumn(), 
+        		TokenErrorCode.LEXEM_UNKNOWN, 
+        		lexem
+        		);
         cursor.next();
     }
     public Token generateEndToken(Cursor cursor){
@@ -149,7 +158,12 @@ public class Lexer{
         //ErrorStream.clear();
         Token final_token = generateToken(null, TokenType.EOF, cursor.getLine(), cursor.getColumn());
         if(!c_block_closed){
-            currentError = throwError("*/", c_block_lstart, c_block_cstart, TokenErrorCode.BLOCK_COMMENT_NOT_CLOSED);
+            currentError = throwError(
+            		null, 
+            		c_block_lstart, 
+            		c_block_cstart, 
+            		TokenErrorCode.MISMATCH, 
+            		"*/");
         }
         return final_token;
     }

@@ -8,4 +8,7 @@ public class AST {
     public Node getRoot(){
         return this.root;
     }
+    public void setRoot(Node root){
+    	this.root = root;
+    }
 }

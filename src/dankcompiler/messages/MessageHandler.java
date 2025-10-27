@@ -4,6 +4,7 @@ import java.util.EnumMap;
 
 import dankcompiler.parsing.errors.TokenErrorCode;
 import dankcompiler.parsing.errors.TokenErrorType;
+import dankcompiler.parsing.tokens.TokenType;
 
 public class MessageHandler {
     private final Language lang;
@@ -41,8 +42,13 @@ public class MessageHandler {
         messages.put(MessageType.ERRORS_NOT_FOUND_MESSAGE, "No se encontraron errores.");
         //Phases
         typeInfo.put(TokenErrorType.LEXICAL, "Análisis Léxico");
+        typeInfo.put(TokenErrorType.SYNTAX, "Análisis Sintáctico");
+        typeInfo.put(TokenErrorType.SEMANT, "Análisis Semántico");
         //Messages
         errorMessages.put(TokenErrorCode.LEXEM_UNKNOWN, "Lexema desconocido: %s");
-        errorMessages.put(TokenErrorCode.BLOCK_COMMENT_NOT_CLOSED, "Se esperaba: %s");
+        errorMessages.put(TokenErrorCode.MISMATCH, "Se esperaba: %s");
+        errorMessages.put(TokenErrorCode.TOKEN_MISMATCH, "(%s) Se esperaba: %s");
+        errorMessages.put(TokenErrorCode.TOKEN_UNEXPECTED, "Token inesperado: %s");
+        errorMessages.put(TokenErrorCode.ID_UNEXPECTED, "Identificador inesperado: %s");
     }
 }

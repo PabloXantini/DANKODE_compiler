@@ -17,7 +17,7 @@ public class CompileMsgHandler {
     }
     public String generateErrorMessage(TokenError error){
         String output = messages.getMessagePlaceHolder(error.errorcode);
-        output = String.format(output, error.lexem);       
+        output = String.format(output, (Object[])error.args);       
         return output;
     }
     //This is for interactive purpose

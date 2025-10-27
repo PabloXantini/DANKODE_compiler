@@ -57,7 +57,7 @@ public class FileHandler {
     private void readLazy(){
         try{
             while (currentLine!=null){
-                process(cursor);
+                process();
             }
             doAtReadFinish(cursor);
         }catch(IOException error){
@@ -127,7 +127,7 @@ public class FileHandler {
      */
     public void doAtReadFinish(Cursor cursor){}
 
-    public void process(Cursor cursor) throws IOException{
+    public void process() throws IOException{
         currentLine = readBuffer.readLine();
     }
 

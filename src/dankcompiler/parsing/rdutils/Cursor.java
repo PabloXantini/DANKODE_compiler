@@ -36,6 +36,7 @@ public class Cursor {
     		advanceNewLine();
     		inited = true;
     	}
+    	if(lcontent==null) return false;
         return value<lcontent.length();
     }
     public boolean carryLately() {
@@ -66,6 +67,7 @@ public class Cursor {
     	readerContext.getWriter().flush();
     }
     public void write(String str){
+    	if(str==null) return;
     	readerContext.getWriter().print(str);
     }
 }

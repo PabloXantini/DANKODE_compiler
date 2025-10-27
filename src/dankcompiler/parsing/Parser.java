@@ -1,10 +1,16 @@
 package dankcompiler.parsing;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Stack;
 
 import dankcompiler.parsing.ast.AST;
 import dankcompiler.parsing.ast.Node;
 import dankcompiler.parsing.ast.GroupNode;
+import dankcompiler.parsing.errors.CompileErrorHandler;
+import dankcompiler.parsing.errors.TokenError;
+import dankcompiler.parsing.errors.TokenErrorCode;
+import dankcompiler.parsing.errors.TokenErrorType;
 import dankcompiler.parsing.tokens.Token;
 import dankcompiler.parsing.tokens.TokenCat;
 import dankcompiler.parsing.tokens.TokenType;
@@ -16,18 +22,13 @@ import dankcompiler.parsing.tokens.TokenType;
 enum ParseMode{
     PROGRAM,
     //BLOCK STUFF
-    INSTRUCTION,
-    BODY,
+    INSTRUCTION, BODY,
     //DECLARATION STUFF
-    ON_DECLARATION,
-    DEFINITION,
+    ON_DECLARATION, DEFINITION,
     //ASSIGNMENT STUFF
-    ON_ASSIGNMENT,
-    ASSIGN_END,
+    ON_ASSIGNMENT, ASSIGN_END,
     //WHILE STUFF
-    ON_WHILE_COND,
-    ON_WHILE_COND_END,
-    WHILE_END,
+    ON_WHILE_COND, ON_WHILE_COND_END, WHILE_END,
     //EXPRESSIONS
     EXPR,
     //Term Specification
@@ -38,9 +39,15 @@ enum ParseMode{
 public class Parser {
     //OUTPUT
     private AST ast;
+    //TOKEN BACKUP
+    private Token current_token;
+    //ERRORS
+    private final ArrayList<TokenError> CurrentErrors;
+    //==================================================
     //private int context_level = 0;
     //Value Token Backup
     private Token previous_token;
+    private Lexer lexerReference;
     //Node Backup
     private Stack<ParseMode> context_stack;
     private Stack<Node> branch_stack;
@@ -50,255 +57,241 @@ public class Parser {
     //private static final int MAX_PRECEDENCE = 7;
     //private int precedence_level = MAX_PRECEDENCE;
 
-    public Parser(){
+    public Parser(Lexer lexer){
         //INSTANCING
         GroupNode program = new GroupNode();
         this.ast = new AST(program);
+        this.CurrentErrors = new ArrayList<TokenError>();
+        
         this.context_stack = new Stack<ParseMode>();
         this.branch_stack = new Stack<Node>();
         this.expression_stack = new Stack<Token>();
         //INITIALIZATION
+        this.lexerReference = lexer;
+        
         this.context_stack.push(ParseMode.PROGRAM);
         this.branch_stack.push(program);
     }
     public AST getAST(){
         return this.ast;
     }
-    public void consumeToken(Token token){
-        parse(token);
+    public void clean() {
+    	this.CurrentErrors.clear();
     }
-    private void parse(Token token){
-        ParseMode mode = context_stack.peek();
-        switch (mode) {
-            case PROGRAM:
-                parseProgram(token);
-                break;
-            case INSTRUCTION:
-                parseInstructions(token);
-                break;
-            case ON_DECLARATION:
-                parseDeclaration(token);
-                break;
-            case ON_ASSIGNMENT:
-                parseAssignment(token);
-                break;
-            case ON_WHILE_COND:
-                break;
-            case ASSIGN_END:
-                parseAssignEnd(token);
-                break;
-            case DEFINITION:
-                parseDefinition(token);                
-                break;
-            case EXPR:
-                parseExpression(token);
-                break;
-            default:
-                break;
-        }
+    //METHODS FOR ERROR HANDLING
+    public ArrayList<TokenError> getCurrentErrors(){
+    	return this.CurrentErrors;
     }
-    private Node getLastBranch(){
-        return this.branch_stack.peek();
+    private TokenError throwError(String lexem, int line, int column, TokenErrorCode code, String... args){
+        TokenError error = CompileErrorHandler.generateError(lexem, TokenErrorType.SYNTAX, line, column, code, args);
+        CurrentErrors.add(error);
+        return error;
     }
-    //METHODS FOR BACKTRACKING
-    private void back(int context_level){
-        for(int i=0; i>=0 && i<context_level && !context_stack.isEmpty(); i++ ){
-            context_stack.pop();
-        }
+    private void handleError(Token tokenHandled, TokenErrorCode code, String... args) {
+    	String bad_symbol = tokenHandled.getSymbol(); 
+    	switch(code) {
+    		case TOKEN_MISMATCH:
+    			throwError(
+        				bad_symbol, 
+        				tokenHandled.getLine(), 
+        				tokenHandled.getColumn(), 
+        				TokenErrorCode.TOKEN_MISMATCH,
+        				bad_symbol,
+        				args[0]
+        				);
+    			break;
+    		case ID_UNEXPECTED:
+    			throwError(
+        				bad_symbol, 
+        				tokenHandled.getLine(), 
+        				tokenHandled.getColumn(), 
+        				TokenErrorCode.TOKEN_MISMATCH,
+        				bad_symbol
+        				);
+    			break;
+    		default:
+    			break;
+    	}
     }
-    private void backUntil(ParseMode mode){
-        while(!context_stack.isEmpty() && context_stack.peek()!=mode){
-            context_stack.pop();
-        }
+    private void handleUnexpectedToken() throws IOException{
+    	String bad_symbol = peekToken().getSymbol();
+		throwError(
+				bad_symbol,
+				peekToken().getLine(),
+				peekToken().getColumn(),
+				TokenErrorCode.TOKEN_UNEXPECTED,
+				bad_symbol
+				);
+		advanceToken();
     }
-    /* 
-     * mode = PROGRAM
-     */
-    private void parseProgram(Token token){
-        //Program -> [EOF] | (InstructionList)
-        TokenType type = token.getType();
-        switch (type) {
-            case EOF:
-                System.out.println("Program Finished");
-                break;
-            default:
-                //if not EOF try parsing the instructions
-                System.out.println("Program Inited");
-                context_stack.push(ParseMode.INSTRUCTION);
-                parse(token);
-                break;
-        }
+    private void attachErrors(ArrayList<TokenError> errors) {
+    	for(TokenError error : errors) {
+    		CurrentErrors.add(error);
+    	}
     }
-    /*
-     * mode = PROGRAM
-     */
-    private void parseInstructions(Token token){
-        //InstructionList -> () | (INSTRUCTION)(InstructionList)
-        //INSTRUCTION -> [TYPE](ON_DECLARATION) | [ID](ON_ASSIGNMENT) | [IF](ON_IF) | [WHILE](ON_WHILE) | [DOWHILE](ON_DOWHILE) | FOR(ON_FOR)
-        TokenType type = token.getType();
-        System.out.println("\tInstruction Detected");
-        switch (type){
-            case NUMMY, NUMPT, CHARA:
-                System.out.println("\t\tStatement Detected");
-                System.out.println("\t\tDeclaration Start");
-                context_stack.push(ParseMode.ON_DECLARATION);
-                break;
-            case ID:
-                System.out.println("\t\tStatement Detected");
-                System.out.println("\t\tAssignement Start");
-                System.out.println("\t\t\tID("+token.getSymbol()+") Detected");
-                context_stack.push(ParseMode.ON_ASSIGNMENT);
-                break;
-            case WHILE:
-                System.out.println("\t\tWhile Detected");
-                System.out.println("\t\tWhile Start");
-                context_stack.push(ParseMode.ON_WHILE_COND);
-            default:
-                context_stack.pop();//goto upper context
-                parse(token);
-                break;
-        }
+    //METHODS FOR MAIN PARSING
+    private ParseMode peekContext() {
+    	return this.context_stack.peek();
     }
-    private void parseDeclaration(Token token){
-        //[ID](DEFINITION)
-        TokenType type = token.getType();
-        switch (type) {
-            case ID:
-                System.out.println("\t\tDeclaration Detected");
-                System.out.println("\t\t\tID Detected");
-                context_stack.push(ParseMode.DEFINITION);
-                previous_token = token;
-                break;
-            default:
-                break;
-        }
+    private Token peekToken(){
+    	return current_token;
     }
-    private void parseDefinition(Token token){
-        //DEFINITION -> [;] | [,](ON_DECLARATION) | [=](EXPR)
-        TokenType type = token.getType();
-        switch (type) {
-            case SEMICOLON:
-                System.out.println("\t\t\t; Detected");
-                backUntil(ParseMode.INSTRUCTION);
-                break;
-            case COMMA:
-                System.out.println("\t\t\t, Detected");
-                context_stack.pop();//Goto to ON_DECLARATION
-                break;
-            case ASSIGN:
-                System.out.println("\t\tAssignment Detected");
-                System.out.println("\t\t\tID peeked");
-                System.out.println("\t\t\t= Detected");
-                context_stack.push(ParseMode.EXPR);
-                this.previous_token = token;
-                break;
-            default:
-                break;
-        }
+    private Token advanceToken() throws IOException{
+    	current_token=lexerReference.generateNextToken();
+    	attachErrors(lexerReference.getErrors());
+    	return current_token; 
     }
-    private void parseAssignment(Token token){
-        //ON_ASSIGNMENT	-> [=](*ASSIGN_EXPR)
-        //(*ASSIGN_EXPR) -> (EXPR)(ASSIGN_END)
-        TokenType type = token.getType();
-        switch (type) {
-            case ASSIGN:
-                System.out.println("\t\t\t= Detected");
-                context_stack.push(ParseMode.ASSIGN_END);
-                context_stack.push(ParseMode.EXPR);
-                this.previous_token = token;
-                break;
-            default:
-                break;
-        }
+    private void expectToken(TokenType type, TokenErrorCode code, String... args) throws IOException {
+    	TokenType typepeeked = current_token.getType();
+    	if(type==typepeeked) {
+    		if(type!=TokenType.EOF) advanceToken();
+    	}else {
+    		Token tokenMismatched = peekToken();
+    		handleError(tokenMismatched, code, args);    		
+    	}
     }
-    private void parseAssignEnd(Token token){
-        TokenType type = token.getType();
-        if(type==TokenType.SEMICOLON){
-            System.out.println("\t\t\t; Detected");
-            backUntil(ParseMode.INSTRUCTION);;
-        }
+    private void passToken(TokenType type) throws IOException {
+    	if(type!=TokenType.EOF) advanceToken();
     }
-    private void parseWhileCond(Token token){
-        //ON_WHILE	-> [(](*WHILE_EXPR)
-        //*WHILE_EXPR -> (EXPR)(COND_END)
-
-        //
-        //
-        TokenType type = token.getType();
-        switch (type){
-            case LP:
-                System.out.println("\t\t\t( Detected");
-                context_stack.push(ParseMode.ON_WHILE_COND_END);
-                context_stack.push(ParseMode.EXPR);
-                break;
-            default:
-                break;
-        }
+    //LL(1) MAIN PARSING
+    public void parse() throws IOException{
+    	advanceToken();
+    	this.ast.setRoot(parseProgram());
     }
-    private void parseWhileCondEnd(Token token){
-        //COND_END -> [)](InstructionList)
-        TokenType type = token.getType();
-        switch (type){
-            case RP:
-                System.out.println("\t\t{ While Body Start");
-                context_stack.push(ParseMode.BODY);
-                break;
-            default:
-                break;
-        }
+    //PROGRAM: Program -> (Instructions)[EOF]
+    private GroupNode parseProgram() throws IOException {
+    	GroupNode newProgram = null;
+    	parseInstructions();
+    	expectToken(TokenType.EOF, TokenErrorCode.MISMATCH, "EOF");
+    	return null;
     }
-    private void parseWhileBody(Token token){
-        //BODY -> [{](*BODY_TAIL)
-        //*BODY_TAIL -> (InstructionList)[}]
-        TokenType type = token.getType();
-        switch (type){
-            case LB:
-                System.out.println("\t\t{ While Body Start");
-                context_stack.push(ParseMode.WHILE_END);
-                context_stack.push(ParseMode.INSTRUCTION);
-                break;
-            default:
-                break;
-        }
+    //INSTRUCTIONS: Instructions -> () | (Instruction)(Instructions)
+    private Node parseInstructions() throws IOException{
+    	TokenType type = peekToken().getType();
+    	switch(type) {
+    		//FIRST(Instructions)
+    		case NUMMY, NUMPT, CHARA: 
+    		case ID:
+    		case WHILE:
+    			parseInstruction();
+    			parseInstructions();
+    			break;
+    		case EOF:
+    			break;
+    		default:
+    			handleUnexpectedToken();
+    			break;
+    	}
+    	return null;
     }
-    private void parseExpression(Token token){
-        TokenCat cat = token.getCategory();
-        TokenType type = token.getType();
-        switch (cat) {
-            case OPERATOR, LITERAL, ID:
-                System.out.println("\t\t\t"+token.getCategory()+"("+token.getSymbol()+") Detected");
-                expression_stack.push(token);
-                return;
-            default:
-                break;
-        }
-        switch (type) {
-            case LP:
-                System.out.println("\t\t\t( Detected");
-                //Creates a subexpression stack
-                expression_stack.push(token);
-                return;
-            case RP:
-                System.out.println("\t\t\t) Detected");
-                expression_stack.push(token);
-                return; 
-            default:
-                if(expression_stack.isEmpty()){
-                    System.out.println("Error: Expression expected");
-                    return;
-                }
-                context_stack.pop();//Exit EXPR
-                //Closes expression creating the final tree node
-                //expression_stack.push(new Token("EOF",TokenType.EOF,TokenCat.EOF,0,0));
-                Expression expression = parseExpressionTree(parseMinorExpression(), 0);
-                //Stores expression tree
-                //Clear the expression stack
-                this.exp_pointer = 0;
-                expression_stack.clear();
-                parse(token);
-                return;
-        }
+    //INSTRUCTION: Instruction -> (Statement) | WHILE
+    private Node parseInstruction() throws IOException {
+    	TokenType type = peekToken().getType();
+    	switch(type) {
+    		//FIRST(Instruction)
+    		case NUMMY, NUMPT, CHARA: 
+    		case ID:
+    			parseStatement();
+    			break;
+    		case WHILE:
+    			passToken(type);
+    			break;
+    		default:
+    			handleUnexpectedToken();
+    			break;
+    	}
+    	return null;
     }
+    //STATEMENTS: Statement -> (StatementBody)[;]
+    private Node parseStatement() throws IOException {
+    	parseStatementBody();
+    	expectToken(TokenType.SEMICOLON, TokenErrorCode.TOKEN_MISMATCH,";");
+    	return null;
+    }
+    //STATEMENTBODY: StatementBody -> () | (Declaration) | (Assignment)
+    private Node parseStatementBody() throws IOException {
+    	TokenType type = peekToken().getType();
+    	switch(type) {
+			//FISRT(Statement)
+    		case NUMMY, NUMPT, CHARA:
+    			parseDeclaration();
+    			break;
+    		case ID:
+    			parseAssignment();
+    			break;
+    		case SEMICOLON:
+    			break;
+    		default:
+    			handleUnexpectedToken();
+    			break;
+    	}
+    	return null;
+    }
+    //DECLARATION: Declaration -> (Type)(Definitions)
+    private Node parseDeclaration() throws IOException {
+    	parseDataType();
+    	parseDefinitions();
+    	return null;
+    }
+    //DATATYPES KEYWORD: (Type) -> [NUMMY] | [NUMPT] | [CHARA]
+    private void parseDataType() throws IOException {
+    	TokenType type = peekToken().getType();
+    	switch(type) {
+    		case NUMMY, NUMPT, CHARA:
+    			passToken(type);
+    			break;
+    		default:
+    			handleUnexpectedToken();
+    			break;
+    	}
+    }
+    //DEFINITIONS: Definitions -> (Definition)(MoreDefinitions)
+    private void parseDefinitions() throws IOException {
+    	parseDefinition();
+    	parseMoreDefinitions();
+    }
+    //DEFINTION: Definition -> [ID](DefinitionAssignment)
+    private void parseDefinition() throws IOException {
+    	expectToken(TokenType.ID, TokenErrorCode.ID_UNEXPECTED);
+    	parseDefinitionAssignment();
+    }
+    //MORE_DEFINITIONS: MoreDefinitions -> () | [,](Definitions)
+    private void parseMoreDefinitions() throws IOException{
+    	TokenType type = peekToken().getType();
+    	switch(type) {
+    		case COMMA:
+    			passToken(type);
+    			parseDefinitions();
+    			break;
+    		case SEMICOLON:
+    			break;
+    		default:
+    			handleUnexpectedToken();
+    			break;
+    	}
+    }
+    //DEFINITION IN ASSIGNMENT: DefinitionAssignment -> () | [=](Expr)
+    private void parseDefinitionAssignment() throws IOException {
+    	TokenType type = peekToken().getType();
+    	switch(type) {
+    		case ASSIGN:
+    			passToken(type);
+    			//Expression
+    			break;
+    		case SEMICOLON:
+    			break;
+    		default:
+    			handleUnexpectedToken();
+    			break;
+    	}
+    }
+    //ASSIGNMENT: Assignment -> [ID][=](Expr)
+    private void parseAssignment() throws IOException {
+    	expectToken(TokenType.ID, TokenErrorCode.ID_UNEXPECTED);
+    	expectToken(TokenType.ASSIGN, TokenErrorCode.TOKEN_MISMATCH, "=");
+    	//Expression
+    }
+    
     //METHODS FOR EXPRESSION PARSING
     private Token peekExpArg(){
         return this.exp_pointer < expression_stack.size() ? expression_stack.get(this.exp_pointer) : null;
@@ -310,73 +303,7 @@ public class Parser {
         return token;
     }
     //IMPLEMENTATION OF PRECEDENCE CLIMBING
-    private Expression parseExpressionTree(Expression left, int min_precedence){
-        if(expression_stack.isEmpty()) return null;
-        Token op = null;
-        Expression right = null;
-        int precedence = 0;
-        //peek next token
-        Token Look_A_Head = peekExpArg();
-        while(Look_A_Head!=null && !isUnary(Look_A_Head) && getPrecedence(Look_A_Head.getType()) >= min_precedence){
-            int op_precedence = precedence;
-            //advance next token
-            op = advanceExpArg();
-            right = parseMinorExpression();
-            //peek next token
-            Look_A_Head = peekExpArg();
-            while(Look_A_Head!=null && !isUnary(Look_A_Head) && (getPrecedence(Look_A_Head.getType()) > op_precedence)){
-                right = parseExpressionTree(right, op_precedence++);
-                Look_A_Head = peekExpArg();
-            }
-            BinaryOp new_binary_op = new BinaryOp(op.getType());
-            new_binary_op.setLeftTerm(left);
-            new_binary_op.setRightTerm(right);
-            left = new_binary_op;
-        }
-        return left;
-    }
-    private Expression parseMinorExpression(){
-        if(expression_stack.isEmpty()) return null;
-        Token token_peeked = peekExpArg();
-        if(token_peeked==null) return null;
-        TokenType type = token_peeked.getType();
-        Expression expr;
-        switch(type){
-            case PLUS, MINUS:
-                advanceExpArg();
-                UnaryOp new_unary_op = new UnaryOp(type);
-                expr = parseMinorExpression();
-                new_unary_op.setTerm(expr);
-                return new_unary_op;
-            case ID:
-                advanceExpArg();
-                return new Variable(token_peeked.getSymbol());
-            case CINT, CFLOAT, CSTRING:
-                advanceExpArg();
-                return new Constant(token_peeked.getSymbol());
-            case LP:
-                advanceExpArg();
-                expr = parseExpressionTree(parseMinorExpression(), 0);
-                Token token_expected = advanceExpArg();
-                if(token_expected.getType()!=TokenType.RP){
-                    System.out.println("Error: ) Expected");
-                }
-                return expr;
-            default:
-                System.out.println("Error: ) Expected");
-                return null;
-        }
-    }
-    private boolean isUnary(Token token){
-        if(token==null) return false;
-        TokenType type = token.getType();
-        TokenCat cat = token.getCategory();
-        if(getPrecedence(type)>0 && cat==TokenCat.OPERATOR){
-            return false;
-        }else{
-            return true;
-        }
-    }
+
     private int getPrecedence(TokenType type){
         switch (type) {
             case OR: return 6;
@@ -388,6 +315,8 @@ public class Parser {
             default: return 0;//UNARIO-TERM
         }
     }
+    //Method Stuff
+
 }
 //STATEMENTS
 class Declaration extends Node{

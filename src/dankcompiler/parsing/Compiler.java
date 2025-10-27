@@ -20,7 +20,8 @@ public class Compiler extends FileHandler {
 		super();
 		MsgHandler = new CompileMsgHandler();
 		ErrorTable = new ArrayList<TokenError>();
-		lexer = new Lexer();
+		lexer = new Lexer(this.getCursor());
+		parser = new Parser(this.lexer);
 	}
 	public Compiler(String filepath) {
 		super(filepath);
@@ -52,17 +53,18 @@ public class Compiler extends FileHandler {
         }
     }
     private void attachErrors(ArrayList<TokenError> errors) {
-    	for(TokenError error : errors) {
-    		ErrorTable.add(error);
-    	}
+    	ErrorTable.addAll(errors);
     }
 	@Override
-	public void process(Cursor cursor) throws IOException {
-		Token nextToken = lexer.generateNextToken(cursor);
-		attachErrors(lexer.getErrors());
+	public void process() throws IOException {
+		//Token nextToken = lexer.generateNextToken();
+		//attachErrors(lexer.getErrors());
+		parser.parse();
 	}
 	@Override
 	public void doAtReadFinish(Cursor cursor) {
+		attachErrors(parser.getCurrentErrors());
+		parser.clean();
 		getWriter().close();
 	}
 }
