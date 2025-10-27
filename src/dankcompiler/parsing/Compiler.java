@@ -8,7 +8,6 @@ import dankcompiler.messages.MessageType;
 import dankcompiler.parsing.errors.TokenError;
 import dankcompiler.parsing.rdutils.Cursor;
 import dankcompiler.parsing.rdutils.FileHandler;
-import dankcompiler.parsing.tokens.Token;
 
 public class Compiler extends FileHandler {
 	private CompileMsgHandler MsgHandler;

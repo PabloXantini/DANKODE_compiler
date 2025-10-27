@@ -2,7 +2,6 @@ package dankcompiler.parsing;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Stack;
 
 import dankcompiler.parsing.ast.AST;
 import dankcompiler.parsing.ast.Node;
@@ -15,27 +14,6 @@ import dankcompiler.parsing.tokens.Token;
 import dankcompiler.parsing.tokens.TokenCat;
 import dankcompiler.parsing.tokens.TokenType;
 
-/*
- * This enum encapsulates all non-terminal symbols, 
- * because terminal symbols are tokens
- */
-enum ParseMode{
-    PROGRAM,
-    //BLOCK STUFF
-    INSTRUCTION, BODY,
-    //DECLARATION STUFF
-    ON_DECLARATION, DEFINITION,
-    //ASSIGNMENT STUFF
-    ON_ASSIGNMENT, ASSIGN_END,
-    //WHILE STUFF
-    ON_WHILE_COND, ON_WHILE_COND_END, WHILE_END,
-    //EXPRESSIONS
-    EXPR,
-    //Term Specification
-    TERM,
-}
-
-
 public class Parser {
     //OUTPUT
     private AST ast;
@@ -43,19 +21,8 @@ public class Parser {
     private Token current_token;
     //ERRORS
     private final ArrayList<TokenError> CurrentErrors;
-    //==================================================
-    //private int context_level = 0;
-    //Value Token Backup
-    //private Token previous_token;
+
     private Lexer lexerReference;
-    //Node Backup
-    //private Stack<ParseMode> context_stack;
-    //private Stack<Node> branch_stack;
-    //Expression Backup
-    //private int exp_pointer = 0;
-    //private Stack<Token> expression_stack;
-    //private static final int MAX_PRECEDENCE = 7;
-    //private int precedence_level = MAX_PRECEDENCE;
 
     public Parser(Lexer lexer){
         //INSTANCING
@@ -63,15 +30,9 @@ public class Parser {
         this.ast = new AST(program);
         this.CurrentErrors = new ArrayList<TokenError>();
         
-        //this.context_stack = new Stack<ParseMode>();
-        //this.branch_stack = new Stack<Node>();
-        //this.expression_stack = new Stack<Token>();
-        
         //INITIALIZATION
         this.lexerReference = lexer;
         
-        //this.context_stack.push(ParseMode.PROGRAM);
-        //this.branch_stack.push(program);
     }
     public AST getAST(){
         return this.ast;

@@ -4,7 +4,6 @@ import java.util.EnumMap;
 
 import dankcompiler.parsing.errors.TokenErrorCode;
 import dankcompiler.parsing.errors.TokenErrorType;
-import dankcompiler.parsing.tokens.TokenType;
 
 public class MessageHandler {
     private final Language lang;
@@ -23,6 +22,9 @@ public class MessageHandler {
             default:
                 break;
         }
+    }
+    public Language getLanguage() {
+    	return this.lang;
     }
     public void setMessage(MessageType msgcode, String newMessage){
         messages.replace(msgcode, newMessage);
