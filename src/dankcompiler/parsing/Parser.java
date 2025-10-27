@@ -143,13 +143,14 @@ public class Parser {
     	attachErrors(lexerReference.getErrors());
     	return previous_token; 
     }
-    private void expectToken(TokenType type, TokenErrorCode code, String... args) throws IOException {
+    private Token expectToken(TokenType type, TokenErrorCode code, String... args) throws IOException {
     	TokenType typepeeked = current_token.getType();
     	if(type==typepeeked) {
-    		advanceToken();
+    		return advanceToken();
     	}else {
     		Token tokenMismatched = peekToken();
-    		handleError(tokenMismatched, code, args);    		
+    		handleError(tokenMismatched, code, args);
+    		return tokenMismatched;
     	}
     }
     private void passToken() throws IOException {
@@ -161,14 +162,15 @@ public class Parser {
     }
     //PROGRAM: Program -> (Instructions)[EOF]
     private GroupNode parseProgram() throws IOException {
-    	GroupNode newProgram = null;
+    	GroupNode newProgram = new GroupNode();
     	System.out.println("Si se activa mas de una vez fracasamos");
-    	parseInstructions();
+    	newProgram = parseInstructions(newProgram);
     	expectToken(TokenType.EOF, TokenErrorCode.MISMATCH, "EOF");
-    	return null;
+    	return newProgram;
     }
     //INSTRUCTIONS: Instructions -> () | (Instruction)(Instructions)
-    private Node parseInstructions() throws IOException{
+    private GroupNode parseInstructions(GroupNode supernode) throws IOException{
+    	Node node = null;
     	TokenType type = peekToken().getType();
     	switch(type) {
     		//FIRST(Instructions)
@@ -176,8 +178,9 @@ public class Parser {
     		case ID:
     		case WHILE:
     		case SEMICOLON:
-    			parseInstruction();
-    			parseInstructions();
+    			node = parseInstruction(supernode);
+    			if(node!=null) supernode.appendNode(node);
+    			parseInstructions(supernode);
     			break;
     		case RB, EOF:
     			break;
@@ -186,19 +189,20 @@ public class Parser {
     			handleUnexpectedToken();
     			break;
     	}
-    	return null;
+    	return supernode;
     }
     //INSTRUCTION: Instruction -> (Statement) | WHILE
-    private Node parseInstruction() throws IOException {
+    private Node parseInstruction(GroupNode supernode) throws IOException {
+    	Node node = null;
     	TokenType type = peekToken().getType();
     	switch(type) {
     		//FIRST(Instruction)
     		case NUMMY, NUMPT, CHARA: 
     		case ID:
-    			parseStatement();
+    			node = parseStatement(supernode);
     			break;
     		case WHILE:
-    			parseWhile();
+    			node = parseWhile();
     			break;
     		case SEMICOLON:
     			advanceToken();
@@ -208,24 +212,45 @@ public class Parser {
     			handleUnexpectedToken();
     			break;
     	}
-    	return null;
+    	return node;
+    }
+    //INSTRUCTION-1: SingleInstruction -> Assignment [;] | WHILE
+    private Node parseInstruction() throws IOException {
+    	Node node = null;
+    	TokenType type = peekToken().getType();
+    	switch(type) {
+    		//FIRST(Instruction) 
+    		case ID:
+    			node = parseAssignment();
+    			expectToken(TokenType.SEMICOLON, TokenErrorCode.TOKEN_MISMATCH,";");
+    			break;
+    		case WHILE:
+    			parseWhile();
+    			break;
+    		default:
+    			System.out.println("Hola? Habla Instruction");
+    			handleUnexpectedToken();
+    			break;
+    	}
+    	return node;
     }
     //STATEMENTS: Statement -> (StatementBody)[;]
-    private Node parseStatement() throws IOException {
-    	parseStatementBody();
+    private Node parseStatement(GroupNode supernode) throws IOException {
+    	Node node = parseStatementBody(supernode);
     	expectToken(TokenType.SEMICOLON, TokenErrorCode.TOKEN_MISMATCH,";");
-    	return null;
+    	return node;
     }
     //STATEMENTBODY: StatementBody -> () | (Declaration) | (Assignment)
-    private Node parseStatementBody() throws IOException {
+    private Node parseStatementBody(GroupNode supernode) throws IOException {
+    	Node node = null;
     	TokenType type = peekToken().getType();
     	switch(type) {
 			//FISRT(Statement)
     		case NUMMY, NUMPT, CHARA:
-    			parseDeclaration();
+    			parseDeclaration(supernode);
     			break;
     		case ID:
-    			parseAssignment();
+    			node = parseAssignment();
     			break;
     		case SEMICOLON:
     			break;
@@ -234,13 +259,12 @@ public class Parser {
     			handleUnexpectedToken();
     			break;
     	}
-    	return null;
+    	return node;
     }
     //DECLARATION: Declaration -> (Type)(Definitions)
-    private Node parseDeclaration() throws IOException {
+    private void parseDeclaration(GroupNode supernode) throws IOException {
     	parseDataType();
-    	parseDefinitions();
-    	return null;
+    	parseDefinitions(supernode);
     }
     //DATATYPES KEYWORD: (Type) -> [NUMMY] | [NUMPT] | [CHARA]
     private void parseDataType() throws IOException {
@@ -256,22 +280,33 @@ public class Parser {
     	}
     }
     //DEFINITIONS: Definitions -> (Definition)(MoreDefinitions)
-    private void parseDefinitions() throws IOException {
-    	parseDefinition();
-    	parseMoreDefinitions();
+    private Node parseDefinitions(GroupNode supernode) throws IOException {
+    	Node node = null;
+    	node = parseDefinition();
+    	if(node!=null) supernode.appendNode(node);
+    	parseMoreDefinitions(supernode);
+    	return node;
     }
     //DEFINTION: Definition -> [ID](DefinitionAssignment)
-    private void parseDefinition() throws IOException {
-    	expectToken(TokenType.ID, TokenErrorCode.ID_UNEXPECTED);
-    	parseDefinitionAssignment();
+    private Assignment parseDefinition() throws IOException { 
+    	Token ID = expectToken(TokenType.ID, TokenErrorCode.ID_UNEXPECTED);
+    	Expression expr = (Expression)parseDefinitionAssignment();
+    	if(expr!=null) {
+    		Assignment node = new Assignment();
+    		Variable var = new Variable(ID.getSymbol());
+    		node.setVariable(var);
+    		node.setExpression(expr);
+    		return node;
+    	}
+    	return null;
     }
     //MORE_DEFINITIONS: MoreDefinitions -> () | [,](Definitions)
-    private void parseMoreDefinitions() throws IOException{
+    private void parseMoreDefinitions(GroupNode supernode) throws IOException{
     	TokenType type = peekToken().getType();
     	switch(type) {
     		case COMMA:
     			advanceToken();
-    			parseDefinitions();
+    			parseDefinitions(supernode);
     			break;
     		case SEMICOLON:
     			break;
@@ -282,59 +317,72 @@ public class Parser {
     	}
     }
     //DEFINITION IN ASSIGNMENT: DefinitionAssignment -> () | [=](Expression)
-    private void parseDefinitionAssignment() throws IOException {
+    private Expression parseDefinitionAssignment() throws IOException {
     	TokenType type = peekToken().getType();
     	switch(type) {
     		case ASSIGN:
     			advanceToken();
     			//Expression
-    			parseExpression(parseMinorExpression(), 0);
-    			break;
+    			return parseExpression(parseMinorExpression(), 0);
     		case COMMA, SEMICOLON:
-    			break;
+    			return null;
     		default:
     			System.out.println("Hola? Habla DefinitionAssignment");
     			handleUnexpectedToken();
-    			break;
+    			return null;
     	}
     }
     //ASSIGNMENT: Assignment -> [ID][=](Expression)
-    private void parseAssignment() throws IOException {
-    	expectToken(TokenType.ID, TokenErrorCode.ID_UNEXPECTED);
+    private Assignment parseAssignment() throws IOException {
+    	Token ID = expectToken(TokenType.ID, TokenErrorCode.ID_UNEXPECTED);
     	expectToken(TokenType.ASSIGN, TokenErrorCode.TOKEN_MISMATCH, "=");
+    	//Variable
+    	Variable var = new Variable(ID.getSymbol());
     	//Expression
-    	parseExpression(parseMinorExpression(), 0);
+    	Expression expr = parseExpression(parseMinorExpression(), 0);
+    	Assignment node = new Assignment();
+    	node.setVariable(var);
+    	node.setExpression(expr);
+    	return node;
     }
     //WHILE: WHILE -> [while](Group)(Body)
-    private void parseWhile() throws IOException {
+    private While parseWhile() throws IOException {
     	advanceToken();
-    	parseGroup();
-    	parseBody();
+    	Expression expr = parseGroup();
+    	Node bodyloop = parseBody();
+    	While instruction = new While();
+    	instruction.setAtCondition(expr);
+    	instruction.setLoopBody(bodyloop);
+    	return instruction;
     }
     //BODY: Body -> (Instruction) | 
-    private void parseBody() throws IOException {
+    private Node parseBody() throws IOException {
+    	Node node = null;
     	TokenType type = peekToken().getType();
     	switch(type) {
     		//FIRST(BODY)
     		case NUMMY, NUMPT, CHARA:
     		case ID:
     		case WHILE:
-    			parseInstruction();
+    			node = parseInstruction();
     			break;
     		case LB:
-    			parseBlock();
+    			node = parseBlock();
     			break;
     		default:
     			System.out.println("Hola? Habla body");
     			handleUnexpectedToken();
     			break;
     	}
+    	return node;
     }
     //BLOCK: Group-> [{](Instructions)[}]
-    private void parseBlock() throws IOException {
+    private GroupNode parseBlock() throws IOException {
+    	GroupNode block = new GroupNode();
     	expectToken(TokenType.LB, TokenErrorCode.TOKEN_MISMATCH, "{");
-    	parseInstructions();
+    	block = parseInstructions(block);
     	expectToken(TokenType.RB, TokenErrorCode.TOKEN_MISMATCH, "}");
+    	return block;
     }
     //GROUP: Group-> [(](Expression)[)]
     private Expression parseGroup() throws IOException {
@@ -350,9 +398,10 @@ public class Parser {
     	//peek
     	Token Look_A_Head = peekToken();
     	while(Look_A_Head!=null && !isUnary(Look_A_Head) && getPrecedence(Look_A_Head.getType()) >= min_precedence) {
-    		int op_precedence = getPrecedence(Look_A_Head.getType());
+    		//get operator
+    		op = Look_A_Head;
+    		int op_precedence = getPrecedence(op.getType());    		
     		//advance
-    		op = Look_A_Head; 
     		advanceToken();
     		//RIGHT
     		right = parseMinorExpression();
@@ -404,7 +453,7 @@ public class Parser {
         if(token==null) return false;
         TokenType type = token.getType();
         TokenCat cat = token.getCategory();
-        if(getPrecedence(type)>0 && cat==TokenCat.OPERATOR){
+        if(getPrecedence(type)>=0 && cat==TokenCat.OPERATOR){
             return false;
         }else{
             return true;
@@ -412,13 +461,13 @@ public class Parser {
     }
     private int getPrecedence(TokenType type){
         switch (type) {
-            case OR: return 6;
-            case AND: return 5;
-            case EQUAL, NONEQUAL: return 4;
+            case OR: return 0;
+            case AND: return 1;
+            case EQUAL, NONEQUAL: return 2;
             case GTE, LTE, GT, LT: return 3;
-            case PLUS, MINUS: return 2;
-            case MUL, DIV, MOD: return 1;        
-            default: return 0;//UNARIO-TERM
+            case PLUS, MINUS: return 4;
+            case MUL, DIV, MOD: return 5;        
+            default: return -1;//UNARIO-TERM
         }
     }
 }
