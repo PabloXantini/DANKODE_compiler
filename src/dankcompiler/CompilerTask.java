@@ -17,6 +17,8 @@ public class CompilerTask{
     	Analyzer.setReadMode(ReadMode.LAZY);
     	Analyzer.focusFileOutput("out.dankc", "src/dankcompiler/temp");
     	Analyzer.read();
+    	Analyzer.analyze();
     	Analyzer.showErrors();
+    	Analyzer.showSymbolTable();
     }
 }

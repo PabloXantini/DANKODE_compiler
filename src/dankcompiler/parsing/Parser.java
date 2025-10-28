@@ -8,17 +8,21 @@ import dankcompiler.parsing.ast.Node;
 import dankcompiler.parsing.ast.nodes.*;
 import dankcompiler.parsing.ast.GroupNode;
 import dankcompiler.errors.CompileErrorHandler;
+import dankcompiler.analysis.symbol.Symbol;
+import dankcompiler.analysis.symbol.SymbolTable;
 import dankcompiler.errors.CompileError;
 import dankcompiler.errors.CompileErrorCode;
 import dankcompiler.errors.CompileErrorType;
 import dankcompiler.parsing.tokens.Token;
 import dankcompiler.parsing.tokens.TokenCat;
 import dankcompiler.parsing.tokens.TokenType;
+import dankcompiler.utils.TypeAdapter;
 
 public class Parser {
-	private Lexer lexerReference;
+	private final Lexer lexerReference;
     //OUTPUT
     private AST ast;
+    private SymbolTable verboseSymbolTable;
     //TOKEN BACKUP
     private Token current_token;
     //ERRORS
@@ -27,16 +31,24 @@ public class Parser {
         //INSTANCING
         GroupNode program = new GroupNode();
         this.ast = new AST(program);
+        this.verboseSymbolTable = new SymbolTable();
         this.CurrentErrors = new ArrayList<CompileError>();     
         //INITIALIZATION
         this.lexerReference = lexer;
         
     }
+    //GET THE ABSTRACT SYNTAX TREE 
     public AST getAST(){
         return this.ast;
     }
+    //GET THE VERBOSED SYMBOL TABLE
+    public SymbolTable getSymbolTable() {
+    	return this.verboseSymbolTable;
+    }
+    //CLEAN MEMORY
     public void clean() {
     	this.CurrentErrors.clear();
+    	this.verboseSymbolTable.clear();
     }
     //METHODS FOR ERROR HANDLING
     public ArrayList<CompileError> getCurrentErrors(){
@@ -48,7 +60,7 @@ public class Parser {
         return error;
     }
     private void handleError(Token tokenHandled, CompileErrorCode code, String... args) throws IOException {
-    	String bad_symbol = tokenHandled.getSymbol(); 
+    	String bad_symbol = tokenHandled.getSymbol();
     	switch(code) {
     		case TOKEN_MISMATCH:
     			throwError(
@@ -90,6 +102,11 @@ public class Parser {
     		CurrentErrors.add(error);
     	}
     }
+    //METHODS FOR POSTERIOR ANALYSIS
+    private void storeInSymbolTable(TokenType type) {
+    	Symbol symbol = new Symbol(TypeAdapter.cast(type), current_token.getSymbol());
+		verboseSymbolTable.insert(current_token.getSymbol(), symbol);
+    }
     //METHODS FOR MAIN PARSING
     private Token peekToken() throws IOException{
     	if(current_token==null) current_token = lexerReference.generateNextToken();
@@ -102,15 +119,23 @@ public class Parser {
     	attachErrors(lexerReference.getErrors());
     	return previous_token; 
     }
-    private Token expectToken(TokenType type, CompileErrorCode code, String... args) throws IOException {
+    private Token advanceToken(TokenType type) throws IOException {
+    	storeInSymbolTable(type);
+    	return advanceToken();
+    }
+    private Token expectToken(TokenType type_to_set, TokenType type, CompileErrorCode code, String... args) throws IOException {
     	TokenType typepeeked = current_token.getType();
     	if(type==typepeeked) {
-    		return advanceToken();
+    		return advanceToken(type_to_set);
     	}else {
     		Token tokenMismatched = peekToken();
     		handleError(tokenMismatched, code, args);
     		return tokenMismatched;
     	}
+    }
+    private Token expectToken(TokenType type, CompileErrorCode code, String... args) throws IOException {
+    	TokenType typepeeked = current_token.getType();
+    	return expectToken(typepeeked, type, code, args);
     }
     //LL(1) MAIN PARSING
     public void parse() throws IOException{
@@ -160,7 +185,7 @@ public class Parser {
     			node = parseWhile();
     			break;
     		case SEMICOLON:
-    			advanceToken();
+    			advanceToken(null);
     			break;
     		default:
     			handleUnexpectedToken();
@@ -223,7 +248,7 @@ public class Parser {
     	TokenType type = peekToken().getType();
     	switch(type) {
     		case NUMMY, NUMPT, CHARA:
-    			advanceToken();
+    			advanceToken(TokenType.EOF);
     			return type;
     		default:
     			handleUnexpectedToken();
@@ -240,8 +265,8 @@ public class Parser {
     }
     //DEFINTION: Definition -> [ID](DefinitionAssignment)
     private Assignment parseDefinition(GroupNode supernode, TokenType data_type) throws IOException { 
-    	Token ID = expectToken(TokenType.ID, CompileErrorCode.ID_UNEXPECTED);
-    	Variable var = new Variable(ID.getSymbol());
+    	Token ID = expectToken(data_type, TokenType.ID, CompileErrorCode.ID_UNEXPECTED);
+    	Variable var = new Variable(ID);
     	Declaration dec_node = new Declaration(data_type, var);
     	supernode.appendNode(dec_node);
     	Expression expr = (Expression)parseDefinitionAssignment();
@@ -258,7 +283,7 @@ public class Parser {
     	TokenType type = peekToken().getType();
     	switch(type) {
     		case COMMA:
-    			advanceToken();
+    			advanceToken(type);
     			parseDefinitions(supernode, data_type);
     			break;
     		case SEMICOLON:
@@ -273,7 +298,7 @@ public class Parser {
     	TokenType type = peekToken().getType();
     	switch(type) {
     		case ASSIGN:
-    			advanceToken();
+    			advanceToken(type);
     			//Expression
     			return parseExpression(parseMinorExpression(), 0);
     		case COMMA, SEMICOLON:
@@ -288,7 +313,7 @@ public class Parser {
     	Token ID = expectToken(TokenType.ID, CompileErrorCode.ID_UNEXPECTED);
     	expectToken(TokenType.ASSIGN, CompileErrorCode.TOKEN_MISMATCH, "=");
     	//Variable
-    	Variable var = new Variable(ID.getSymbol());
+    	Variable var = new Variable(ID);
     	//Expression
     	Expression expr = parseExpression(parseMinorExpression(), 0);
     	Assignment node = new Assignment();
@@ -298,7 +323,7 @@ public class Parser {
     }
     //WHILE: WHILE -> [while](Group)(Body)
     private While parseWhile() throws IOException {
-    	advanceToken();
+    	advanceToken(TokenType.WHILE);
     	Expression expr = parseGroup();
     	Node bodyloop = parseBody();
     	While instruction = new While();
@@ -352,7 +377,7 @@ public class Parser {
     		op = Look_A_Head;
     		int op_precedence = getPrecedence(op.getType());    		
     		//advance
-    		advanceToken();
+    		advanceToken(Look_A_Head.getType());
     		//RIGHT
     		right = parseMinorExpression();
     		//peek
@@ -363,7 +388,7 @@ public class Parser {
     			//peek
     			Look_A_Head = peekToken();
     		}
-    		BinaryOp node = new BinaryOp(op.getType());
+    		BinaryOp node = new BinaryOp(op);
     		node.setLeftTerm(left);
     		node.setRightTerm(right);
     		left = node;
@@ -380,17 +405,17 @@ public class Parser {
     	TokenType type = token_peeked.getType();
     	switch(type) {
     		case PLUS, MINUS:
-    			advanceToken();
-    			UnaryOp u_node = new UnaryOp(type);
+    			advanceToken(type);
+    			UnaryOp u_node = new UnaryOp(token_peeked);
     			Expression expr = parseMinorExpression();
     			u_node.setTerm(expr);
     			return u_node;
     		case ID:
-    			advanceToken();
-    			return new Variable(token_peeked.getSymbol());
+    			advanceToken(type);
+    			return new Variable(token_peeked);
     		case CINT, CFLOAT, CSTRING:
-    			advanceToken();
-    			return new Constant(token_peeked.getSymbol());
+    			advanceToken(type);
+    			return new Constant(token_peeked);
     		case LP:
     			return parseGroup();
     		default:

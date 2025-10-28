@@ -1,14 +1,14 @@
 package dankcompiler.parsing.ast.nodes;
 
-import dankcompiler.parsing.tokens.TokenType;
+import dankcompiler.parsing.tokens.Token;
 
 public class UnaryOp extends Expression {
-    private final TokenType op;
+    private final Token op;
     private Expression term;
-    public UnaryOp(TokenType op){
+    public UnaryOp(Token op){
         this.op = op;
     }
-    public TokenType getOp(){
+    public Token getOp(){
         return this.op;
     }
     public Expression getTerm(){

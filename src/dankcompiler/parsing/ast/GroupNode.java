@@ -10,6 +10,9 @@ public class GroupNode extends Node{
     public void appendNode(Node node){
         this.children.add(node);
     }
+    public ArrayList<Node> getChildren(){
+    	return this.children;
+    }
     /*
     @Override
     public void appendNode(Node node, Node branch) {

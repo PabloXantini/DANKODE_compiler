@@ -1,10 +1,12 @@
 package dankcompiler.parsing.ast;
 
+import dankcompiler.parsing.tokens.Token;
+
 public class Node {
-    protected String value = null;
+    protected Token value = null;
     public Node(){
     }
-    public void setValue(String value){
+    public void setValue(Token value){
         this.value = value;
     }
     //public abstract void appendNode(Node node);

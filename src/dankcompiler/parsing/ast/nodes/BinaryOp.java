@@ -1,15 +1,15 @@
 package dankcompiler.parsing.ast.nodes;
 
-import dankcompiler.parsing.tokens.TokenType;
+import dankcompiler.parsing.tokens.Token;
 
 public class BinaryOp extends Expression {
-    private final TokenType op;
+    private final Token op;
     private Expression left_term;
     private Expression right_term;
-    public BinaryOp(TokenType op){
+    public BinaryOp(Token op){
         this.op = op;
     }
-    public TokenType getOp(){
+    public Token getOp(){
         return this.op;
     }
     public Expression getLeftTerm(){

@@ -2,9 +2,12 @@ package dankcompiler.parsing;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Set;
 
 import dankcompiler.messages.CompileMsgHandler;
 import dankcompiler.messages.MessageType;
+import dankcompiler.analysis.Analyzer;
+import dankcompiler.analysis.symbol.SymbolTable;
 import dankcompiler.errors.CompileError;
 import dankcompiler.parsing.rdutils.Cursor;
 import dankcompiler.parsing.rdutils.FileHandler;
@@ -13,7 +16,9 @@ public class Compiler extends FileHandler {
 	private CompileMsgHandler MsgHandler;
 	private Lexer lexer;
 	private Parser parser;
+	private Analyzer analyzer;
 	//DATA OUTPUTS
+	private SymbolTable SymTable = null;
     private final ArrayList<CompileError> ErrorTable;
 	public Compiler() {
 		super();
@@ -21,11 +26,7 @@ public class Compiler extends FileHandler {
 		ErrorTable = new ArrayList<CompileError>();
 		lexer = new Lexer(this.getCursor());
 		parser = new Parser(this.lexer);
-	}
-	public Compiler(String filepath) {
-		super(filepath);
-		MsgHandler = new CompileMsgHandler();
-		ErrorTable = new ArrayList<CompileError>();
+		analyzer = new Analyzer();
 	}
     public ArrayList<CompileError> getAllErrors(){
         return ErrorTable;
@@ -51,8 +52,22 @@ public class Compiler extends FileHandler {
                 ", Columna: "+error.column);
         }
     }
+    public void showSymbolTable() {
+    	Set<String> keys = SymTable.getModel().keySet();
+    	System.out.println("Simbolo\t\t\tTipo");
+    	for(String key : keys) {
+    		System.out.println(key+"\t\t\t"+SymTable.get(key).getType().name());
+    	}
+    }
     private void attachErrors(ArrayList<CompileError> errors) {
     	ErrorTable.addAll(errors);
+    }
+    public void analyze() {
+    	analyzer.setupVerbosity(true);
+    	analyzer.analyze(parser.getAST());
+    	attachErrors(analyzer.getCurrentErrors());
+    	//analyzer.clean();
+    	//parser.getSymbolTable().clear();
     }
 	@Override
 	public void process() throws IOException {
@@ -63,7 +78,11 @@ public class Compiler extends FileHandler {
 	@Override
 	public void doAtReadFinish(Cursor cursor) {
 		attachErrors(parser.getCurrentErrors());
-		parser.clean();
+		SymTable = parser.getSymbolTable();
+		analyzer.setSymbolTable(SymTable);
+		
+		parser.getCurrentErrors().clear();
+		
 		getWriter().close();
 	}
 }
