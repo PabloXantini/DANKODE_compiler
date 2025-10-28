@@ -52,5 +52,9 @@ public class MessageHandler {
         errorMessages.put(CompileErrorCode.TOKEN_MISMATCH, "(%s) Se esperaba: %s");
         errorMessages.put(CompileErrorCode.TOKEN_UNEXPECTED, "Token inesperado: %s");
         errorMessages.put(CompileErrorCode.ID_UNEXPECTED, "Identificador inesperado: %s");
+        errorMessages.put(CompileErrorCode.VAR_UNDEFINED, "Variable indefinida: %s");
+        errorMessages.put(CompileErrorCode.VAR_REDEFINITION, "Redefinición de variable: %s, está declarada antes como (%s)");
+        errorMessages.put(CompileErrorCode.OPERATOR_INVALID, "Operador invalido: %s entre un (%s) y (%s)");
+        errorMessages.put(CompileErrorCode.TYPE_EXPR_INCOMPATIBILITY, "La variable \"%s\" no es compatible con la expresión de tipo (%s)");
     }
 }

@@ -1,24 +1,25 @@
 package dankcompiler.analysis.symbol;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class SymbolTable {
-	private final HashMap<String, Symbol> model;
+	private final LinkedHashMap<String, Symbol> model;
 	private SymbolTable super_model = null;
 	public SymbolTable() {
-		this.model = new HashMap<String, Symbol>();
+		this.model = new LinkedHashMap<String, Symbol>();
 	}
 	public SymbolTable(SymbolTable super_model) {
-		this.model = new HashMap<String, Symbol>();
+		this.model = new LinkedHashMap<String, Symbol>();
 		this.super_model = super_model;
 	}
-	public HashMap<String, Symbol> getModel() {
+	public LinkedHashMap<String, Symbol> getModel() {
 		return this.model;
 	}
 	public void clear() {
 		model.clear();
 	}
 	public void insert(String key, Symbol symbol) {
+		if(model.get(key)!=null) return; 
 		model.put(key, symbol);
 	}
 	public Symbol get(String key) {

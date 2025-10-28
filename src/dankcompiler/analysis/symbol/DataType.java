@@ -4,5 +4,6 @@ public enum DataType {
 	NUMMY,
 	NUMPT,
 	CHARA,
+	BOOL,
 	NONE
 }
