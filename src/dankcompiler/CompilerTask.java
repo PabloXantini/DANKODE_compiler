@@ -10,7 +10,8 @@ public class CompilerTask{
     }
     public static void main(String[] args) {
     	CompilerTask dank = new CompilerTask();
-    	dank.start("src/dankcompiler/HolaMundo.dank");
+    	//dank.start("src/dankcompiler/HolaMundo.dank");
+    	dank.start("src/dankcompiler/Test1.dank");
     }
     public void start(String file) {
     	Analyzer.setFilePath(file);
@@ -20,5 +21,7 @@ public class CompilerTask{
     	Analyzer.analyze();
     	Analyzer.showErrors();
     	Analyzer.showSymbolTable();
+    	Analyzer.showOutput();
+    	Analyzer.dumpDiagnostics();
     }
 }

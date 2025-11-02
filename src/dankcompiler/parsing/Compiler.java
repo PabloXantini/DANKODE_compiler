@@ -8,9 +8,11 @@ import dankcompiler.messages.CompileMsgHandler;
 import dankcompiler.messages.MessageType;
 import dankcompiler.analysis.Analyzer;
 import dankcompiler.analysis.symbol.SymbolTable;
+import dankcompiler.analysis.triplets.Triplet;
 import dankcompiler.errors.CompileError;
 import dankcompiler.parsing.rdutils.Cursor;
 import dankcompiler.parsing.rdutils.FileHandler;
+import dankcompiler.utils.CsvExporter;
 
 public class Compiler extends FileHandler {
 	private CompileMsgHandler MsgHandler;
@@ -19,6 +21,7 @@ public class Compiler extends FileHandler {
 	private Analyzer analyzer;
 	//DATA OUTPUTS
 	private SymbolTable SymTable = null;
+	private ArrayList<Triplet> ICode = null;
     private final ArrayList<CompileError> ErrorTable;
 	public Compiler() {
 		super();
@@ -59,13 +62,37 @@ public class Compiler extends FileHandler {
     		System.out.println(key+"\t\t\t"+SymTable.get(key).getType().name());
     	}
     }
+    public void showOutput(){
+        for(Triplet entry : ICode){
+            System.out.println(
+            	entry.getIndex()+
+                "\t"+entry.getInstruction().name()+
+                "\t"+entry.getIdObject()+
+                "\t\t\t"+entry.getIdSource());
+        }
+    }
     private void attachErrors(ArrayList<CompileError> errors) {
     	ErrorTable.addAll(errors);
+    }
+    public void dumpDiagnostics() {
+    	String symPath = "src/dankcompiler/temp/out_symbols.csv";
+		String errPath = "src/dankcompiler/temp/out_errors.csv";
+		String outPath = "src/dankcompiler/temp/output.csv";
+		boolean symOk = false;
+		boolean errOk = false;
+		boolean outOk = false;
+    	if(SymTable!=null) symOk = CsvExporter.exportSymbols(SymTable, symPath);
+		errOk = CsvExporter.exportErrors(ErrorTable, errPath, MsgHandler);
+		if(ICode!=null) outOk = CsvExporter.exportSymbols(SymTable, outPath);
+		if(symOk) System.out.println("CSV exportado: " + symPath);
+		if(errOk) System.out.println("CSV exportado: " + errPath);
+		if(outOk) System.out.println("CSV exportado: " + outPath);
     }
     public void analyze() {
     	analyzer.setupVerbosity(true);
     	analyzer.analyze(parser.getAST());
     	attachErrors(analyzer.getCurrentErrors());
+    	ICode = analyzer.getCode();
     	//analyzer.clean();
     	//parser.getSymbolTable().clear();
     }

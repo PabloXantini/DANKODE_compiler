@@ -407,6 +407,7 @@ public class Parser {
     		case PLUS, MINUS:
     			advanceToken(type);
     			UnaryOp u_node = new UnaryOp(token_peeked);
+    			u_node.setStart(token_peeked);
     			Expression expr = parseMinorExpression();
     			u_node.setTerm(expr);
     			return u_node;

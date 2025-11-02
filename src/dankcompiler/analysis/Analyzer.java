@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import dankcompiler.analysis.symbol.DataType;
 import dankcompiler.analysis.symbol.SymbolTable;
+import dankcompiler.analysis.triplets.Triplet;
 import dankcompiler.errors.CompileError;
 import dankcompiler.errors.CompileErrorCode;
 import dankcompiler.errors.CompileErrorHandler;
@@ -21,20 +22,24 @@ public class Analyzer {
 	enum AnalysisState {
 		SYMBOL_GEN,
 		TYPE_RESOLUTION,
-		TYPE_COMPAT
+		GENERATION,
 	}
 	private AnalysisState current_state = AnalysisState.SYMBOL_GEN;
 	//RESOURCES
 	private boolean verbosed = false;
 	private AST ast;
+	private final IGenerator Generator;
 	/*
 	 * OUTPUTS
 	 */
 	//SYMBOL TABLE
 	private SymbolTable MainSymbolTable = null;
+	//GENERATED CODE
+	private ArrayList<Triplet> ICode = null;
 	//ERRORS
 	private final ArrayList<CompileError> CurrentErrors;
 	public Analyzer() {
+		Generator = new IGenerator();
 		MainSymbolTable = new SymbolTable(); 
 		CurrentErrors = new ArrayList<CompileError>();
 	}
@@ -53,6 +58,13 @@ public class Analyzer {
 	public void setSymbolTable(SymbolTable symbol_table) {
 		this.MainSymbolTable = symbol_table;
 	}
+	//GET INTERMEDIATE CODE
+	public ArrayList<Triplet> getCode() {
+		return this.ICode;
+	}
+	public void setCode(ArrayList<Triplet> code) {
+		this.ICode = code;
+	}
 	//METHODS FOR ERROR HANDLING
 	public ArrayList<CompileError> getCurrentErrors(){
     	return this.CurrentErrors;
@@ -67,41 +79,26 @@ public class Analyzer {
     	switch(code) {
     		case VAR_UNDEFINED:
     			throwError(
-        				bad_symbol, 
-        				tokenHandled.getLine(), 
-        				tokenHandled.getColumn(), 
-        				code,
+        				bad_symbol, tokenHandled.getLine(), tokenHandled.getColumn(), code,
         				bad_symbol
         				);
     			break;
     		case VAR_REDEFINITION:
     			throwError(
-        				bad_symbol, 
-        				tokenHandled.getLine(), 
-        				tokenHandled.getColumn(), 
-        				code,
-        				bad_symbol,
-        				args[0]
+        				bad_symbol, tokenHandled.getLine(), tokenHandled.getColumn(), code,
+        				bad_symbol, args[0]
         				);
     			break;
     		case OPERATOR_INVALID:
     			throwError(
-        				bad_symbol, 
-        				tokenHandled.getLine(), 
-        				tokenHandled.getColumn(), 
-        				code,
-        				bad_symbol,
-        				args[0], args[1]
+        				bad_symbol, tokenHandled.getLine(), tokenHandled.getColumn(), code,
+        				bad_symbol, args[0], args[1]
         				);
     			break;
     		case TYPE_EXPR_INCOMPATIBILITY:
     			throwError(
-        				bad_symbol, 
-        				tokenHandled.getLine(), 
-        				tokenHandled.getColumn(), 
-        				code,
-        				bad_symbol,
-        				args[0]
+        				bad_symbol, tokenHandled.getLine(), tokenHandled.getColumn(), code,
+        				bad_symbol, args[0]
         				);
     			break;
     		default:
@@ -115,6 +112,8 @@ public class Analyzer {
 		generateSymbolTable();
 		//2. READS THE AST + SYMBOL_TABLE -> DATA_TYPE_RESOLUTION
 		resoluteTypes();
+		//3. GENERETE I_CODE
+		callGenerator();
 	}
 	private void generateSymbolTable() {
 		traverseAST(ast.getRoot());
@@ -122,9 +121,14 @@ public class Analyzer {
 	}
 	private void resoluteTypes() {
 		traverseAST(ast.getRoot());
-		current_state = AnalysisState.TYPE_COMPAT;
+		current_state = AnalysisState.GENERATION;
 	}
-	
+	private void callGenerator() {
+		//traverseAST(ast.getRoot());
+		Generator.check(ast.getRoot());
+		setCode(Generator.getOutput());
+		
+	}
 	private void handleState(AnalysisState state, Node node){
 		switch (state) {
 		case SYMBOL_GEN:
@@ -133,6 +137,9 @@ public class Analyzer {
 		case TYPE_RESOLUTION:
 			checkTypeResolution(node);
 			break;
+		//case GENERATION:
+		//	generate(node);
+		//	break;
 		default:
 			break;
 		}
@@ -170,11 +177,16 @@ public class Analyzer {
 			}else if(!isExpressionCompatible(type, exptype)) {
 				if(exptype!=DataType.NONE) handleError(ID.getValue(), CompileErrorCode.TYPE_EXPR_INCOMPATIBILITY, exptype.name());
 			}
-			//current_state= AnalysisState.TYPE_COMPAT;
-			
+		}
+		else if(node instanceof While) {
+			Expression expr = ((While)node).getAtCondition();
+			DataType type = DataType.BOOL;
+			DataType exptype = inferType(expr);
+			if(!isExpressionCompatible(type, exptype)) {
+				if(exptype!=DataType.NONE) handleError(expr.getStart(), CompileErrorCode.TYPE_EXPR_INCOMPATIBILITY, exptype.name());
+			}
 		}
 	}
-
 	private boolean isExpressionCompatible(DataType type_expected, DataType type_given) {
 		if(type_expected == type_given) return true;
 		if(type_expected == DataType.NUMPT && type_given == DataType.NUMMY) return true;

@@ -6,5 +6,6 @@ public class Variable extends Expression {
     public Variable(){}
     public Variable(Token value){
         this.value = value;
+        setStart(value);
     }
 }
