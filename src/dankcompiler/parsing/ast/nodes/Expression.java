@@ -11,7 +11,10 @@ public class Expression extends Node {
 	private Token start;
 	private ArrayList<Tag> trueList = null;
 	private ArrayList<Tag> falseList = null;
-    public Expression(){}
+    public Expression(){
+    	this.trueList = new ArrayList<Tag>();
+    	this.falseList = new ArrayList<Tag>();
+    }
     public Token getStart() {
     	return this.start;
     }

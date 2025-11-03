@@ -6,6 +6,7 @@ public class UnaryOp extends Expression {
     private final Token op;
     private Expression term;
     public UnaryOp(Token op){
+    	super();
         this.op = op;
     }
     public Token getOp(){

@@ -7,6 +7,7 @@ public class BinaryOp extends Expression {
     private Expression left_term;
     private Expression right_term;
     public BinaryOp(Token op){
+    	super();
         this.op = op;
     }
     public Token getOp(){
