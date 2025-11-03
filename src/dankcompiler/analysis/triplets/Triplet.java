@@ -4,8 +4,8 @@ public class Triplet {
 	private final Tag ref_tag;
 	private final int index;
 	private final InstructionType instruction;
-	private final String id_object;
-	private final String id_source;
+	private String id_object;
+	private String id_source;
 	public Triplet(int index, Tag ref_tag, InstructionType instruction, String id_object, String id_source) {
 		this.index = index;
 		this.ref_tag = ref_tag;
@@ -27,5 +27,11 @@ public class Triplet {
 	}
 	public String getIdSource() {
 		return id_source;
+	}
+	public void setIdObject(String new_id) {
+		this.id_object = new_id;
+	}
+	public void setIdSource(String new_id) {
+		this.id_source = new_id;
 	}
 }

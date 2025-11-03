@@ -19,12 +19,15 @@ public class IGenerator extends AnalyzeVisitor {
 	private String tmp_nickname = "temp";
 	private final HashMap<Integer, Boolean> ActiveTemps;
 	//JUMPS
-	private InstructionType jump_reg = InstructionType.YES;
+	private final ArrayList<Triplet> UnresolvedJumps;
 	//OUTPUT
 	private final ArrayList<Triplet> ICode;
 	public IGenerator() {
 		super();
 		ActiveTemps = new HashMap<Integer, Boolean>();
+		//BranchContext = new Stack<ArrayList<Tag>>();
+		//ActiveBranches = new Stack<Branch>();
+		UnresolvedJumps = new ArrayList<Triplet>();
 		ICode = new ArrayList<Triplet>();
 	}
 	//GET INTERMMEDIATE CODE
@@ -32,13 +35,15 @@ public class IGenerator extends AnalyzeVisitor {
 		return this.ICode;
 	}
 	//TRIPLET STUFF
-	private void attachEntry(Tag tag, InstructionType instruction, String id_object, String id_source) {
+	private Triplet attachEntry(Tag tag, InstructionType instruction, String id_object, String id_source) {
 		Triplet newEntry = new Triplet(index++, tag, instruction, id_object, id_source);
 		ICode.add(newEntry);
+		return newEntry;
 	}
-	private void attachEntry(InstructionType instruction, String id_object, String id_source) {
+	private Triplet attachEntry(InstructionType instruction, String id_object, String id_source) {
 		Triplet newEntry = new Triplet(index++, null, instruction, id_object, id_source);
 		ICode.add(newEntry);
+		return newEntry;
 	}
 	//TEMPORAL HANDLING
 	private int restartTemp() {
@@ -57,16 +62,29 @@ public class IGenerator extends AnalyzeVisitor {
 		this.tmp_serializer = tmp;
 	}
 	//GENERATION OF TEMPORAL NICKNAMING
-	private String genName() {
-		return this.tmp_nickname+this.tmp_serializer;
-	}
 	private String genName(int i) {
 		return this.tmp_nickname+i;
 	}
-	//BRANCH HANDLING
+	//TAG HANDLING
 	private Tag createTag() {
 		return new Tag(branch_index++);
-	}	
+	}
+	//BACKPATCHING
+	private ArrayList<Tag> makeList(Tag tag){
+		ArrayList<Tag> newList = new ArrayList<Tag>();
+		newList.add(tag);
+		return newList;
+	}
+	private ArrayList<Tag> merge(ArrayList<Tag> list1, ArrayList<Tag> list2){
+		ArrayList<Tag> merged = new ArrayList<Tag>(list1);
+		merged.addAll(list2);
+		return merged;
+	}
+	private void backpatch(ArrayList<Tag> list, int pointer) {
+		for (Tag tag : list) {
+			tag.setPointer(pointer);
+		}
+	}
 	//MAIN TASK
 	@Override
 	public void visit(Node node) {
@@ -75,99 +93,122 @@ public class IGenerator extends AnalyzeVisitor {
 			restartTemp();
 			Variable ID = ((Assignment)node).getVariable();
 			Expression expr = ((Assignment)node).getExpression();
-			Tag end = createTag();
-			int TMP = visitExpression(expr, end);
+			String TMP = visitExpression(expr);
 			String finalID = ID.getValue().getSymbol();
 			//Register final instruction
-			attachEntry(InstructionType.MOV, finalID, genName(TMP));
+			attachEntry(InstructionType.MOV, finalID, TMP);
 		}
 		else if(node instanceof While) {
 			restartTemp();
 			Tag start = createTag();
-			Tag end = createTag();
+			Tag trueTag = createTag(); //tag when continue loop
+			Tag falseTag = createTag(); //tag when skip loop
 			start.setPointer(index);
 			Expression expr = ((While)node).getAtCondition();
 			Node body = ((While)node).getLoopBody();
-			visitExpression(expr, end);
+			//Visit conditional	
+			visitExpression(expr);
+			//Define the jump TRUE direction
+			trueTag.setPointer(index);
+			//Visit the entire body
 			check(body);
+			//Attach the JMP loop of WHILE
 			attachEntry(InstructionType.JMP, Integer.toString(start.getPointer()), "_");
-			end.setPointer(index+1);
+			//Define the jump FALSE direction
+			falseTag.setPointer(index);
+			//back-patch the conditional
+			backpatch(expr.getTrue(), trueTag.getPointer());
+			backpatch(expr.getFalse(), falseTag.getPointer());
+			for (Triplet batchJump : UnresolvedJumps) {
+				String new_value = Integer.toString(batchJump.getTag().getPointer());
+				batchJump.setIdObject(new_value);
+			}
 		}
 	}
-	private int visitExpression(Node node, Tag end) {
-		int TMP1 = 0;
+	private String visitExpression(Node node) {
+		String TMP = "NONE";
 		if(node instanceof BinaryOp) {
-			InstructionType instruction = TypeAdapter.castI(((BinaryOp)node).getOp().getType());
-			Expression left = ((BinaryOp)node).getLeftTerm();
-			Expression right = ((BinaryOp)node).getRightTerm();			
-			TMP1 = handleExpression(instruction, left, right, end);
-			return TMP1;
+			TMP = handleExpression((BinaryOp)node);
+			return TMP;
 		}
 		else if(node instanceof UnaryOp) {
 			InstructionType instruction = TypeAdapter.castI(((UnaryOp)node).getOp().getType());
 			Expression expr = ((UnaryOp)node).getTerm();
-			TMP1 = visitExpression(expr, end);
-			attachEntry(instruction, genName(TMP1), "_");
-			return TMP1;
+			TMP = visitExpression(expr);
+			attachEntry(instruction, TMP, "_");
+			return TMP;
 		}
 		else if(node instanceof Variable) {
 			String value = ((Variable)node).getValue().getSymbol();
-			TMP1 = newTemp();
-			attachEntry(InstructionType.MOV, genName(TMP1), value);
-			return TMP1;
+			int newTMP = newTemp();
+			attachEntry(InstructionType.MOV, genName(newTMP), value);
+			return genName(newTMP);
 		}
 		else if(node instanceof Constant) {
 			String value = ((Constant)node).getValue().getSymbol();
-			TMP1 = newTemp();
-			attachEntry(InstructionType.MOV, genName(TMP1), value);
-			return TMP1;
+			int newTMP = newTemp();
+			attachEntry(InstructionType.MOV, genName(newTMP), value);
+			return genName(newTMP);
 		}
-		return TMP1;
+		return TMP;
 	}
-	private int handleExpression(InstructionType instruction, Node left, Node right, Tag end) {
-		int TMP1 = 0;
-		int TMP2 = 0;
-		Tag sub_start = createTag();
-		Tag sub_end = end;
+	private String handleExpression(BinaryOp node) {
+		InstructionType instruction = TypeAdapter.castI(node.getOp().getType());
+		Expression left = node.getLeftTerm();
+		Expression right = node.getRightTerm();		
+		String LARG = "NONE";
+		String RARG = "NONE";
 		if(isRelational(instruction) || isLogical(instruction))restartTemp();
 		if(isLogical(instruction)) {
-			this.jump_reg = instruction;
-			sub_end = createTag();
-		}
-		TMP1 = visitExpression(left, end);
-		if(right instanceof Constant) {
-			String value = right.getValue().getSymbol();
-			if(!isLogical(instruction)) attachEntry(instruction, genName(TMP1), value);
+			System.out.println(instruction.name());
+			LARG = visitExpression(left);
+			switch (instruction) {
+				case OR:
+					backpatch(left.getFalse(), index);
+					if(right instanceof Constant) {
+						RARG = right.getValue().getSymbol();
+						node.setTrue(left.getTrue());
+					}else {			
+						RARG = visitExpression(right);
+						node.setTrue(merge(left.getTrue(),right.getTrue()));
+					}
+					node.setFalse(right.getFalse());
+					break;
+				case AND:
+					backpatch(left.getTrue(), index);
+					if(right instanceof Constant) {
+						RARG = right.getValue().getSymbol();
+					}else {			
+						RARG = visitExpression(right);
+					}
+					node.setTrue(right.getTrue());
+					node.setFalse(merge(left.getFalse(), right.getFalse()));
+					break;
+				default:
+					break;
+			}
 		}else {			
-			TMP2 = visitExpression(right, end);
-			if(!isLogical(instruction)) attachEntry(instruction, genName(TMP1), genName(TMP2));
+			LARG = visitExpression(left);
+			if(right instanceof Constant) {
+				RARG = right.getValue().getSymbol();
+			}else {			
+				RARG = visitExpression(right);
+			}
+			attachEntry(instruction, LARG, RARG);
+			if(isRelational(instruction)) {
+				Tag trueTag = createTag();
+				Tag falseTag = createTag();
+				node.setTrue(makeList(trueTag));
+				node.setFalse(makeList(falseTag));
+				Triplet j1 = attachEntry(trueTag, InstructionType.J_True, "?", "_");
+				Triplet j2 = attachEntry(falseTag, InstructionType.J_False, "?", "_");
+				UnresolvedJumps.add(j1);
+				UnresolvedJumps.add(j2);
+			}
 		}
-		if(isRelational(instruction)) {
-			sub_start.setPointer(this.index+2); //CURRENT INS -> JUMP -> NEXT INS
-			handleJumps(this.jump_reg, sub_start, sub_end);
-		}
-		if(isLogical(instruction)) {
-			sub_end.setPointer(index);
-		}
-		return TMP1;
+		return LARG;
 	}
-	private void handleJumps(InstructionType instruction, Tag start, Tag end) {
-		String skipEntry;
-		switch (instruction) {
-			case OR:
-				attachEntry(end, InstructionType.J_True, "JUMP?", "_");
-				skipEntry = Integer.toString(start.getPointer());
-				attachEntry(InstructionType.J_False, skipEntry, "_");
-				break;
-			case AND:
-				skipEntry = Integer.toString(start.getPointer());
-				attachEntry(InstructionType.J_True, skipEntry, "_");
-				attachEntry(end, InstructionType.J_False, "JUMP?", "_");
-				break;				
-			default:
-				break;
-		}
-	}
+
 	private boolean isLogical(InstructionType type) {
 		return type==InstructionType.AND || type==InstructionType.OR;
 	}
