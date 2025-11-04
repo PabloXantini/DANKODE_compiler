@@ -27,6 +27,7 @@ public class Analyzer {
 	private AnalysisState current_state = AnalysisState.SYMBOL_GEN;
 	//RESOURCES
 	private boolean verbosed = false;
+	private Token tokenVisited = null;
 	private AST ast;
 	private final IGenerator Generator;
 	/*
@@ -98,7 +99,7 @@ public class Analyzer {
     		case TYPE_EXPR_INCOMPATIBILITY:
     			throwError(
         				bad_symbol, tokenHandled.getLine(), tokenHandled.getColumn(), code,
-        				bad_symbol, args[0]
+        				bad_symbol, args[0], args[1]
         				);
     			break;
     		default:
@@ -169,13 +170,14 @@ public class Analyzer {
 			Variable ID = ((Assignment)node).getVariable();
 			Expression expr = ((Assignment)node).getExpression();
 			String ID_key = ID.getValue().getSymbol();
+			//String expr_match = expr.getStart().getSymbol();
 			DataType type = MainSymbolTable.get(ID_key).getType();
 			DataType exptype = inferType(expr);
 			if(type==DataType.NONE) {
 				handleError(ID.getValue(), CompileErrorCode.VAR_UNDEFINED);
 				return;
 			}else if(!isExpressionCompatible(type, exptype)) {
-				if(exptype!=DataType.NONE) handleError(ID.getValue(), CompileErrorCode.TYPE_EXPR_INCOMPATIBILITY, exptype.name());
+				if(exptype!=DataType.NONE) handleError(this.tokenVisited, CompileErrorCode.TYPE_EXPR_INCOMPATIBILITY, exptype.name(), type.name());
 			}
 		}
 		else if(node instanceof While) {
@@ -183,7 +185,7 @@ public class Analyzer {
 			DataType type = DataType.BOOL;
 			DataType exptype = inferType(expr);
 			if(!isExpressionCompatible(type, exptype)) {
-				if(exptype!=DataType.NONE) handleError(expr.getStart(), CompileErrorCode.TYPE_EXPR_INCOMPATIBILITY, exptype.name());
+				if(exptype!=DataType.NONE) handleError(this.tokenVisited, CompileErrorCode.TYPE_EXPR_INCOMPATIBILITY, exptype.name(), type.name());
 			}
 		}
 	}
@@ -194,8 +196,10 @@ public class Analyzer {
 	}
 	private DataType inferType(Node node) {
 		if(node instanceof Constant) {
+			this.tokenVisited = node.getValue(); 
 			return TypeAdapter.cast(node.getValue().getType());
 		}else if(node instanceof Variable) {
+			this.tokenVisited = node.getValue();
 			String ID_key = node.getValue().getSymbol();
 			DataType type = MainSymbolTable.get(ID_key).getType();
 			if(type==DataType.NONE) handleError(node.getValue(), CompileErrorCode.VAR_UNDEFINED);

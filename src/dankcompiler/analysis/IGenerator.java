@@ -97,6 +97,10 @@ public class IGenerator extends AnalyzeVisitor {
 			String finalID = ID.getValue().getSymbol();
 			//Register final instruction
 			attachEntry(InstructionType.MOV, finalID, TMP);
+			for (Triplet batchJump : UnresolvedJumps) {
+				String new_value = Integer.toString(batchJump.getTag().getPointer());
+				batchJump.setIdObject(new_value);
+			}
 		}
 		else if(node instanceof While) {
 			restartTemp();
@@ -189,10 +193,12 @@ public class IGenerator extends AnalyzeVisitor {
 			}
 		}else {			
 			LARG = visitExpression(left);
+			//LARG = visitForceExpression(left);
 			if(right instanceof Constant) {
 				RARG = right.getValue().getSymbol();
 			}else {			
 				RARG = visitExpression(right);
+				//RARG = visitForceExpression(right);
 			}
 			attachEntry(instruction, LARG, RARG);
 			if(isRelational(instruction)) {
@@ -208,7 +214,24 @@ public class IGenerator extends AnalyzeVisitor {
 		}
 		return LARG;
 	}
-
+	private String visitForceExpression(Expression expr) {
+		if(!expr.getTrue().isEmpty() && !expr.getFalse().isEmpty()) {
+			int TMP = newTemp();
+			Tag end = createTag();
+			//CASE IF TRUE: RETURNS 1
+			backpatch(expr.getTrue(), index);
+			attachEntry(InstructionType.MOV, genName(TMP), "1");
+			Triplet j1 = attachEntry(end, InstructionType.J_True, "?", "_");
+			UnresolvedJumps.add(j1);
+			//CASE IF FALSE: RETURNS 0
+			backpatch(expr.getFalse(), index);
+			attachEntry(InstructionType.MOV, genName(TMP), "0");
+			//CLOSURE
+			end.setPointer(index);
+			return genName(TMP);
+		}
+		return visitExpression(expr);
+	}
 	private boolean isLogical(InstructionType type) {
 		return type==InstructionType.AND || type==InstructionType.OR;
 	}
