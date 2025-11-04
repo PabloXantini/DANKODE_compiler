@@ -83,7 +83,7 @@ public class Compiler extends FileHandler {
 		boolean outOk = false;
     	if(SymTable!=null) symOk = CsvExporter.exportSymbols(SymTable, symPath);
 		errOk = CsvExporter.exportErrors(ErrorTable, errPath, MsgHandler);
-		if(ICode!=null) outOk = CsvExporter.exportSymbols(SymTable, outPath);
+		if(ICode!=null) outOk = CsvExporter.exportOutput(ICode, outPath);
 		if(symOk) System.out.println("CSV exportado: " + symPath);
 		if(errOk) System.out.println("CSV exportado: " + errPath);
 		if(outOk) System.out.println("CSV exportado: " + outPath);

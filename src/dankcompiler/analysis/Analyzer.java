@@ -27,7 +27,6 @@ public class Analyzer {
 	private AnalysisState current_state = AnalysisState.SYMBOL_GEN;
 	//RESOURCES
 	private boolean verbosed = false;
-	private Token tokenVisited = null;
 	private AST ast;
 	private final IGenerator Generator;
 	/*
@@ -75,6 +74,9 @@ public class Analyzer {
         CurrentErrors.add(error);
         return error;
     }
+	private void handleError(CompileErrorCode code, String... args) {
+		handleError(null, code, args);
+	}
     private void handleError(Token tokenHandled, CompileErrorCode code, String... args) {
     	String bad_symbol = tokenHandled.getSymbol();
     	switch(code) {
@@ -96,10 +98,16 @@ public class Analyzer {
         				bad_symbol, args[0], args[1]
         				);
     			break;
+    		case TYPE_INCOMPATIBILITY:
+    			throwError(
+        				bad_symbol, tokenHandled.getLine(), tokenHandled.getColumn(), code,
+        				bad_symbol, args[0], args[1], args[2]
+        				);
+    			break;
     		case TYPE_EXPR_INCOMPATIBILITY:
     			throwError(
         				bad_symbol, tokenHandled.getLine(), tokenHandled.getColumn(), code,
-        				bad_symbol, args[0], args[1]
+        				bad_symbol, args[0], args[1], args[2]
         				);
     			break;
     		default:
@@ -170,46 +178,64 @@ public class Analyzer {
 			Variable ID = ((Assignment)node).getVariable();
 			Expression expr = ((Assignment)node).getExpression();
 			String ID_key = ID.getValue().getSymbol();
-			//String expr_match = expr.getStart().getSymbol();
 			DataType type = MainSymbolTable.get(ID_key).getType();
-			DataType exptype = inferType(expr);
+			if(type==DataType.NONE) {
+				handleError(ID.getValue(), CompileErrorCode.VAR_UNDEFINED);
+				return;
+			}
+			inferType(expr, ID);
+			/*
 			if(type==DataType.NONE) {
 				handleError(ID.getValue(), CompileErrorCode.VAR_UNDEFINED);
 				return;
 			}else if(!isExpressionCompatible(type, exptype)) {
-				if(exptype!=DataType.NONE) handleError(this.tokenVisited, CompileErrorCode.TYPE_EXPR_INCOMPATIBILITY, exptype.name(), type.name());
-			}
+				//if(exptype!=DataType.NONE) handleError(this.tokenVisited, CompileErrorCode.TYPE_EXPR_INCOMPATIBILITY, exptype.name(), type.name());
+			}*/
 		}
 		else if(node instanceof While) {
 			Expression expr = ((While)node).getAtCondition();
 			DataType type = DataType.BOOL;
-			DataType exptype = inferType(expr);
-			if(!isExpressionCompatible(type, exptype)) {
-				if(exptype!=DataType.NONE) handleError(this.tokenVisited, CompileErrorCode.TYPE_EXPR_INCOMPATIBILITY, exptype.name(), type.name());
+			DataType exptype = inferType(expr, null);
+			if(!isTypeCompatible(type, exptype)) {
+				if(exptype!=DataType.NONE) handleError(CompileErrorCode.TYPE_EXPR_INCOMPATIBILITY, exptype.name(), type.name());
 			}
 		}
 	}
-	private boolean isExpressionCompatible(DataType type_expected, DataType type_given) {
-		if(type_expected == type_given) return true;
+	private boolean isTypeCompatible(DataType type_expected, DataType type_given) {
+		if(type_expected.equals(type_given)) return true;
 		if(type_expected == DataType.NUMPT && type_given == DataType.NUMMY) return true;
 		return false;
 	}
-	private DataType inferType(Node node) {
+	private DataType inferType(Node node, Variable AssignVar) {
 		if(node instanceof Constant) {
-			this.tokenVisited = node.getValue(); 
-			return TypeAdapter.cast(node.getValue().getType());
+			String CONS_KEY = node.getValue().getSymbol();
+			DataType type = MainSymbolTable.get(CONS_KEY).getType();
+			if(AssignVar != null) {
+				String value = AssignVar.getValue().getSymbol();
+				DataType exptype = MainSymbolTable.get(value).getType();
+				if(!isTypeCompatible(type, exptype) && exptype!=DataType.NONE) {
+					handleError(node.getValue() ,CompileErrorCode.TYPE_INCOMPATIBILITY, type.name(), value, exptype.name());
+				}
+			}
+			return type;
 		}else if(node instanceof Variable) {
-			this.tokenVisited = node.getValue();
-			String ID_key = node.getValue().getSymbol();
-			DataType type = MainSymbolTable.get(ID_key).getType();
+			String ID_KEY = node.getValue().getSymbol();
+			DataType type = MainSymbolTable.get(ID_KEY).getType();
 			if(type==DataType.NONE) handleError(node.getValue(), CompileErrorCode.VAR_UNDEFINED);
+			else if (AssignVar != null){
+				String value = AssignVar.getValue().getSymbol();
+				DataType exptype = MainSymbolTable.get(value).getType();
+				if(!isTypeCompatible(type, exptype) && exptype!=DataType.NONE) {
+					handleError(node.getValue() ,CompileErrorCode.TYPE_INCOMPATIBILITY, type.name(), value, exptype.name());
+				}
+			}
 			return type;
 		}else if(node instanceof BinaryOp){
-			DataType ltype = inferType(((BinaryOp)node).getLeftTerm());
-			DataType rtype = inferType(((BinaryOp)node).getRightTerm());
+			DataType ltype = inferType(((BinaryOp)node).getLeftTerm(), AssignVar);
+			DataType rtype = inferType(((BinaryOp)node).getRightTerm(), AssignVar);
 			return inferBinaryType(ltype, ((BinaryOp)node).getOp(), rtype);
 		}else if(node instanceof UnaryOp){
-			return inferType(((UnaryOp)node).getTerm());
+			return inferType(((UnaryOp)node).getTerm(), AssignVar);
 		}else return DataType.NONE;
 	}
 	public DataType inferBinaryType(DataType ltype, Token op, DataType rtype) {

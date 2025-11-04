@@ -80,7 +80,7 @@ public class CsvExporter {
             return false;
         }
     }
-    public static boolean exportOutput(List<Triplet> code, String path, CompileMsgHandler msgHandler){
+    public static boolean exportOutput(List<Triplet> code, String path){
         try{
             File f = new File(path);
             File parent = f.getParentFile();

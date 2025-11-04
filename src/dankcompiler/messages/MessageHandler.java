@@ -55,6 +55,7 @@ public class MessageHandler {
         errorMessages.put(CompileErrorCode.VAR_UNDEFINED, "Variable indefinida: %s");
         errorMessages.put(CompileErrorCode.VAR_REDEFINITION, "Redefinición de variable: %s, está declarada antes como (%s)");
         errorMessages.put(CompileErrorCode.OPERATOR_INVALID, "Operador invalido: %s entre un (%s) y (%s)");
-        errorMessages.put(CompileErrorCode.TYPE_EXPR_INCOMPATIBILITY, "La expresión empezando por %s (%s) no es compatible con el tipo (%s)");
+        errorMessages.put(CompileErrorCode.TYPE_INCOMPATIBILITY, "El término \"%s\" (%s) es incompatible con el tipo de la variable \"%s\" (%s)");
+        errorMessages.put(CompileErrorCode.TYPE_EXPR_INCOMPATIBILITY, "La expresión no es compatible con el tipo (%s)");
     }
 }

@@ -7,6 +7,8 @@ public class CompilerTask{
     private Compiler Analyzer;
     public CompilerTask() {
     	Analyzer = new Compiler();
+    	Analyzer.setReadMode(ReadMode.LAZY);
+    	Analyzer.focusFileOutput("out.dankc", "src/dankcompiler/temp");
     }
     public static void main(String[] args) {
     	CompilerTask dank = new CompilerTask();
@@ -15,8 +17,6 @@ public class CompilerTask{
     }
     public void start(String file) {
     	Analyzer.setFilePath(file);
-    	Analyzer.setReadMode(ReadMode.LAZY);
-    	Analyzer.focusFileOutput("out.dankc", "src/dankcompiler/temp");
     	Analyzer.read();
     	Analyzer.analyze();
     	Analyzer.showErrors();

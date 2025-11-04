@@ -1,4 +1,3 @@
 summary,"Se encontraron errores:"
 code,type,lexem,line,column,errorcode,args,message
-"3180535846","SEMANT","88","4","54","TYPE_EXPR_INCOMPATIBILITY","88;CHARA;NUMMY","La expresión empezando por 88 (CHARA) no es compatible con el tipo (NUMMY)"
-"1775591558","SEMANT","+","8","31","OPERATOR_INVALID","+;BOOL;BOOL","Operador invalido: + entre un (BOOL) y (BOOL)"
+"3180535846","SEMANT","""66""","4","25","TYPE_INCOMPATIBILITY","""66"";CHARA;papuvar_abc_Def_1;NUMMY","El término """"66"""" (CHARA) es incompatible con el tipo de la variable ""papuvar_abc_Def_1"" (NUMMY)"
