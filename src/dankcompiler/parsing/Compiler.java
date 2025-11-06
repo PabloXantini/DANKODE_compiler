@@ -34,6 +34,12 @@ public class Compiler extends FileHandler {
     public ArrayList<CompileError> getAllErrors(){
         return ErrorTable;
     }
+    public SymbolTable getSymbolTable() {
+		return SymTable;
+    }
+    public ArrayList<Triplet> getOutput(){
+    	return ICode;
+    }
     public boolean thereErrors(){
         if(ErrorTable.size()==0) return false;
         return true;

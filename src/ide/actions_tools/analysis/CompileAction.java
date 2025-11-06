@@ -19,6 +19,9 @@ public class CompileAction implements ActionListener{
     	String path = context.getPath();
     	//3. Compile using the dankcompiler
     	context.getCompiler().start(path);
+    	context.showErrors();
+    	context.showSymbolTable();
+    	context.showOutput();
     }
     public CompileAction(IDE context) {
     	this.context = context;

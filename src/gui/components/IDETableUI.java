@@ -1,6 +1,7 @@
 package gui.components;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
@@ -24,5 +25,8 @@ public class IDETableUI extends JPanel{
     }
     public void addRow(Object... row){
         model.addRow(row);
+    }
+    public void clear() {
+    	model.setRowCount(0);
     }
 }

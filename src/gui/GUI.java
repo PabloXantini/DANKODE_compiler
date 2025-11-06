@@ -15,6 +15,8 @@ public class GUI extends JPanel {
     private FileMenuBar fileMenuBar;
     private SideBar sideBar;
     private TextEditor textEditor;
+    private BottomInfoView bottomInfo;
+    
     //Method Build Stuff
     private void setupEvents(){
         fileMenuBar.getBtnCompile().addActionListener(new CompileAction(this.context));
@@ -26,9 +28,11 @@ public class GUI extends JPanel {
         fileMenuBar = new FileMenuBar(this.context);
         sideBar = new SideBar(this.context);
         textEditor = new TextEditor(this.context);
+        bottomInfo = new BottomInfoView(context);
         viewport.setLayout(new BoxLayout(viewport, BoxLayout.Y_AXIS));
         viewport.add(fileMenuBar);
         viewport.add(textEditor);
+        viewport.add(bottomInfo);
         setFocusable(true);
         setLayout(new BorderLayout(0, 0));
         add(menuBar, BorderLayout.NORTH);

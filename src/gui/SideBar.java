@@ -12,6 +12,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 
 import gui.components.IDEButtonUI;
+import gui.sections.OutputViewer;
 import gui.sections.SymbolTableViewer;
 import ide.IDE;
 
@@ -30,6 +31,7 @@ public class SideBar extends JPanel{
     private JPanel panelContent;
     //There must be here a handler
     private SymbolTableViewer symbolViewer;
+    private OutputViewer outViewer;
     //
 
     //private JButton btnFileManager;
@@ -57,6 +59,9 @@ public class SideBar extends JPanel{
         //btnFileManager = new JButton();
         btnDebugAnalysis = new IDEButtonUI(icon1);
         symbolViewer = new SymbolTableViewer();
+        outViewer = new OutputViewer();
+        context.setSymbolTableViewer(symbolViewer);
+        context.setOutputViewer(outViewer);
         //Structuring
         panelIDETools.setLayout(new BoxLayout(panelIDETools, BoxLayout.Y_AXIS));
         panelContent.setLayout(new BoxLayout(panelContent, BoxLayout.Y_AXIS));
@@ -65,7 +70,8 @@ public class SideBar extends JPanel{
         add(panelContent, BorderLayout.EAST);
         //add(btnFileManager);
         panelIDETools.add(btnDebugAnalysis);
-        panelContent.add(symbolViewer); 
+        panelContent.add(symbolViewer);
+        panelContent.add(outViewer);
         //Styles
         panelIDETools.setBackground(background);
         panelIDETools.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 2, border_color));

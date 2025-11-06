@@ -27,4 +27,7 @@ public class CompilerTask{
     	CompilerImpl.showOutput();
     	CompilerImpl.dumpDiagnostics();
     }
+    public Compiler getImplementation() {
+    	return this.CompilerImpl;
+    }
 }
