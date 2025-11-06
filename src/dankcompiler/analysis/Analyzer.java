@@ -49,7 +49,9 @@ public class Analyzer {
 	}
 	//CLEAN MEMORY
 	public void clean() {
+		this.MainSymbolTable.clear();
 		this.CurrentErrors.clear();
+		this.Generator.reset();
 	}
 	//GET/SET THE SYMBOL TABLE
 	public SymbolTable getSymbolTable() {
@@ -130,13 +132,13 @@ public class Analyzer {
 	}
 	private void resoluteTypes() {
 		traverseAST(ast.getRoot());
-		current_state = AnalysisState.GENERATION;
+		//current_state = AnalysisState.GENERATION;
+		current_state = AnalysisState.SYMBOL_GEN;
 	}
 	private void callGenerator() {
 		//traverseAST(ast.getRoot());
 		Generator.check(ast.getRoot());
 		setCode(Generator.getOutput());
-		
 	}
 	private void handleState(AnalysisState state, Node node){
 		switch (state) {
@@ -154,7 +156,7 @@ public class Analyzer {
 		}
 	}
 	private void checkForSymbols(Node node) {
-		if(verbosed && MainSymbolTable!=null) {
+		if(verbosed && (MainSymbolTable!=null||MainSymbolTable.getModel().isEmpty())) {
 			return;
 		}else {
 			genSymbol(node);
@@ -213,7 +215,7 @@ public class Analyzer {
 			if(AssignVar != null) {
 				String value = AssignVar.getValue().getSymbol();
 				DataType exptype = MainSymbolTable.get(value).getType();
-				if(!isTypeCompatible(type, exptype) && exptype!=DataType.NONE) {
+				if(!isTypeCompatible(exptype, type) && exptype!=DataType.NONE) {
 					handleError(node.getValue() ,CompileErrorCode.TYPE_INCOMPATIBILITY, type.name(), value, exptype.name());
 				}
 			}
@@ -225,7 +227,7 @@ public class Analyzer {
 			else if (AssignVar != null){
 				String value = AssignVar.getValue().getSymbol();
 				DataType exptype = MainSymbolTable.get(value).getType();
-				if(!isTypeCompatible(type, exptype) && exptype!=DataType.NONE) {
+				if(!isTypeCompatible(exptype, type) && exptype!=DataType.NONE) {
 					handleError(node.getValue() ,CompileErrorCode.TYPE_INCOMPATIBILITY, type.name(), value, exptype.name());
 				}
 			}

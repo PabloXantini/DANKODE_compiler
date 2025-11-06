@@ -74,6 +74,14 @@ public class Compiler extends FileHandler {
     private void attachErrors(ArrayList<CompileError> errors) {
     	ErrorTable.addAll(errors);
     }
+    public void clear() {
+    	if (ErrorTable != null) ErrorTable.clear();
+    	if (SymTable != null) {
+    		parser.reset();
+    		analyzer.clean(); 
+    	}
+    	if (ICode != null) ICode.clear();
+    }
     public void dumpDiagnostics() {
     	String symPath = "src/dankcompiler/temp/out_symbols.csv";
 		String errPath = "src/dankcompiler/temp/out_errors.csv";
@@ -93,13 +101,10 @@ public class Compiler extends FileHandler {
     	analyzer.analyze(parser.getAST());
     	attachErrors(analyzer.getCurrentErrors());
     	ICode = analyzer.getCode();
-    	//analyzer.clean();
-    	//parser.getSymbolTable().clear();
     }
 	@Override
 	public void process() throws IOException {
-		//Token nextToken = lexer.generateNextToken();
-		//attachErrors(lexer.getErrors());
+		//parser.reset();
 		parser.parse();
 	}
 	@Override

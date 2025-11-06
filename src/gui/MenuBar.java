@@ -9,7 +9,12 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+import ide.IDE;
+import ide.actions.file.FileActions;
+
 public class MenuBar extends JPanel{
+	//Context
+	private IDE context;
     //Colors
     private Color background;
     private Color border_color;
@@ -28,7 +33,11 @@ public class MenuBar extends JPanel{
     private void styleWindowButton(JButton btn){
         btn.setPreferredSize(new Dimension(40,30));
     }
-    public MenuBar(){
+    private void setupEvents() {
+    	btnArchive.addActionListener(new FileActions(context, btnArchive));
+    }
+    public MenuBar(IDE context){
+    	this.context = context;
         background = new Color(102, 178, 255);
         border_color = new Color(120, 190, 255);
         colbtn1 = new Color(255,255,255);
@@ -57,6 +66,8 @@ public class MenuBar extends JPanel{
         styleWindowButton(btnMin);
         styleWindowButton(btnMax);
         styleWindowButton(btnClose);
+        //Events
+        setupEvents();
     }
 
 }

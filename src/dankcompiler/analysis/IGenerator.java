@@ -30,6 +30,14 @@ public class IGenerator extends AnalyzeVisitor {
 		UnresolvedJumps = new ArrayList<Triplet>();
 		ICode = new ArrayList<Triplet>();
 	}
+	//RESET
+	public void reset() {
+		index = 0;
+		branch_index = 0;
+		ActiveTemps.clear();
+		UnresolvedJumps.clear();
+		ICode.clear();
+	}
 	//GET INTERMMEDIATE CODE
 	public ArrayList<Triplet> getOutput(){
 		return this.ICode;
@@ -164,7 +172,7 @@ public class IGenerator extends AnalyzeVisitor {
 		String RARG = "NONE";
 		if(isRelational(instruction) || isLogical(instruction))restartTemp();
 		if(isLogical(instruction)) {
-			System.out.println(instruction.name());
+			//System.out.println(instruction.name());
 			LARG = visitExpression(left);
 			switch (instruction) {
 				case OR:

@@ -46,6 +46,10 @@ public class Parser {
     	return this.verboseSymbolTable;
     }
     //CLEAN MEMORY
+    public void reset() {
+    	current_token = null;
+    	verboseSymbolTable.clear();
+    }
     public void clean() {
     	this.CurrentErrors.clear();
     	this.verboseSymbolTable.clear();
@@ -143,7 +147,7 @@ public class Parser {
     }
     //PROGRAM: Program -> (Instructions)[EOF]
     private GroupNode parseProgram() throws IOException {
-    	System.out.println("LOG: Parsing file once ...");
+    	//System.out.println("LOG: Parsing file once ...");
     	GroupNode newProgram = new GroupNode();
     	newProgram = parseInstructions(newProgram);
     	expectToken(TokenType.EOF, CompileErrorCode.MISMATCH, "EOF");

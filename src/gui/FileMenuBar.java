@@ -9,8 +9,11 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import gui.components.IDEButtonUI;
+import ide.IDE;
 
 public class FileMenuBar extends JPanel{
+	//Context
+	private IDE context;
     //Colors
     private Color background;
     private Color colbtn1;
@@ -26,7 +29,8 @@ public class FileMenuBar extends JPanel{
         btn.setBorder(null);
         btn.setIconColor(colicon);
     }
-    public FileMenuBar(){
+    public FileMenuBar(IDE context){
+    	this.context = context;
         background = new Color(255, 255, 255);
         colbtn1 = new Color(255, 255, 255);
         colicon = new Color(102, 178, 255);

@@ -12,10 +12,13 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import gui.components.IDEScrollbarUI;
+import ide.IDE;
 import gui.components.IDELineNumberGutterUI;
 
 public class TextEditor extends JPanel{
-    //Components
+    //Context
+	private IDE context;
+	//Components
     private JTextArea codeText;
     private IDELineNumberGutterUI lineCounter;
     private JScrollPane scrollPane;
@@ -49,7 +52,9 @@ public class TextEditor extends JPanel{
         vertical.setUI(vscrollUI);
         horizontal.setUI(hscrollUI);
     } 
-    TextEditor(){
+    TextEditor(IDE context){
+    	this.context = context;
+    	context.setEditor(this);
         background = new Color(204, 255, 255);
         bgcolor_scroll = new Color(128,128,128);
         color_scroll = new Color(200,200,200);
@@ -75,7 +80,8 @@ public class TextEditor extends JPanel{
     }
     public IDELineNumberGutterUI getGutter(){
         return this.lineCounter;
-    } 
+    }
+    
 }
 
 class EditorEvent implements DocumentListener {
@@ -100,6 +106,7 @@ class EditorEvent implements DocumentListener {
     @Override
     public void changedUpdate(DocumentEvent e) {
         // TODO Auto-generated method stub
+    	//this.editorContext.getGutter().repaint();
     }
     
 }

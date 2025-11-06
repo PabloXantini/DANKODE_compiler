@@ -51,6 +51,14 @@ public class Cursor {
         column = 1;
         line++;
     }
+    public void reset() {
+    	this.inited = false;
+    	this.carried = false;
+    	this.lcontent = "";
+    	this.value = 0;
+        this.column = 1;
+        this.line = 0;
+    }
     public void advance(int offset, int coloffset){
         this.value=offset;
         this.column+=coloffset;

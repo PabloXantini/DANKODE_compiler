@@ -13,8 +13,11 @@ import javax.swing.JButton;
 
 import gui.components.IDEButtonUI;
 import gui.sections.SymbolTableViewer;
+import ide.IDE;
 
 public class SideBar extends JPanel{
+	//Context
+	private IDE context;
     //Colors
     private Color background;
     private Color border_color;
@@ -42,7 +45,8 @@ public class SideBar extends JPanel{
         btn.setIconColor(colicon);
         btn.setPadding(8);
     }
-    SideBar(){
+    SideBar(IDE context){
+    	this.context = context;
         background = new Color(102, 178, 255);
         border_color = new Color(153, 194, 255);
         //colbtn1 = new Color(255, 255, 255);
@@ -69,7 +73,7 @@ public class SideBar extends JPanel{
         panelContent.setBackground(background);
         panelContent.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 2, border_color));
         panelContent.setPreferredSize(new Dimension(250, 0));
-        panelContent.setVisible(false);
+        panelContent.setVisible(true);
         styleSideBarButton(btnDebugAnalysis);
         //Events
         btnDebugAnalysis.setToolTipText("Analizar depuración y compilación");

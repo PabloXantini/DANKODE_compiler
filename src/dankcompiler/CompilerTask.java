@@ -4,24 +4,27 @@ import dankcompiler.parsing.Compiler;
 import dankcompiler.parsing.rdutils.ReadMode;
 
 public class CompilerTask{    
-    private Compiler Analyzer;
+    private Compiler CompilerImpl;
     public CompilerTask() {
-    	Analyzer = new Compiler();
-    	Analyzer.setReadMode(ReadMode.LAZY);
-    	Analyzer.focusFileOutput("out.dankc", "src/dankcompiler/temp");
+    	CompilerImpl = new Compiler();
+    	CompilerImpl.setReadMode(ReadMode.LAZY);
+    	CompilerImpl.focusFileOutput("out.dankc", "src/dankcompiler/temp");
     }
+    /*
     public static void main(String[] args) {
     	CompilerTask dank = new CompilerTask();
     	//dank.start("src/dankcompiler/HolaMundo.dank");
     	dank.start("src/dankcompiler/Test1.dank");
-    }
+    	dank.start("src/dankcompiler/Test1.dank");
+    }*/
     public void start(String file) {
-    	Analyzer.setFilePath(file);
-    	Analyzer.read();
-    	Analyzer.analyze();
-    	Analyzer.showErrors();
-    	Analyzer.showSymbolTable();
-    	Analyzer.showOutput();
-    	Analyzer.dumpDiagnostics();
+    	CompilerImpl.clear();
+    	CompilerImpl.setFilePath(file);
+    	CompilerImpl.read();
+    	CompilerImpl.analyze();
+    	CompilerImpl.showErrors();
+    	CompilerImpl.showSymbolTable();
+    	CompilerImpl.showOutput();
+    	CompilerImpl.dumpDiagnostics();
     }
 }

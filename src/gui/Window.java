@@ -1,32 +1,23 @@
 package gui;
 
-import java.awt.EventQueue;
-
 import javax.swing.JFrame;
+
+import ide.IDE;
 
 public class Window extends JFrame {
     private static final long serialVersionUID = 1L;
-    private static GUI gui;
-    public Window(){
+    private IDE context;
+    private GUI gui;
+    public Window(IDE context){
+    	this.context = context;
         setTitle("DANKIDE");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setBounds(50, 50, 800, 600);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
-        gui = new GUI();
+        gui = new GUI(this.context);
         setContentPane(gui);
     }
-    //This a module test, should not execute as entrancy point
-    public static void main(String[] arguments){
-        EventQueue.invokeLater(new Runnable(){
-            public void run(){
-                try{
-                    Window window = new Window();
-                    window.setVisible(true);
-                    gui.focusEditor();
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
-        });
+    public GUI getGUI() {
+    	return this.gui;
     }
 }

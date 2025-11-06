@@ -44,6 +44,7 @@ public class FileHandler {
     }
     //Method Stuff
     private void readEager(){
+    	cursor.reset();
         try{
             while ((currentLine=readBuffer.readLine())!=null){
             	cursor.advanceNewLine();
@@ -55,6 +56,7 @@ public class FileHandler {
         }
     }
     private void readLazy(){
+    	cursor.reset();
         try{
             while (currentLine!=null){
                 process();
@@ -72,9 +74,12 @@ public class FileHandler {
         if (filepath==null) return;
         FileReader reader = null;
         readBuffer = null;
+        currentLine="";
+        //System.out.println(filepath);
         try {
             reader = new FileReader(filepath);
             readBuffer = new BufferedReader(reader);
+            //System.out.println(System.identityHashCode(readBuffer));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -106,7 +111,7 @@ public class FileHandler {
                 tempOutput.delete();
             }
             tempOutput = new File(directory, new_archive);
-            System.out.println(tempOutput.getAbsolutePath());
+            //System.out.println(tempOutput.getAbsolutePath());
             write = new FileWriter(tempOutput);
         } catch (IOException error) {
             System.out.println("Error when creating outputfile: "+error);
@@ -134,5 +139,6 @@ public class FileHandler {
     public void nextLine() throws IOException{
         if(read_mode!=ReadMode.LAZY) return;
         currentLine = readBuffer.readLine();
+        //System.out.println(currentLine);
     }
 }

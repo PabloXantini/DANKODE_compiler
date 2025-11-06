@@ -5,32 +5,23 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JTextArea;
 
-import compilador.*;
+//import compilador.*;
+import ide.IDE;
 
 public class CompileAction implements ActionListener{
-    private JTextArea textArea;
+    private IDE context;
     //Method stuff
     private void compile(){
     	//PROCESS
     	//1. If not saved, force the save of file
-    	//2. Request to App for the path
+    	context.saveFileInEditor();
+    	//2. Request to IDE for the focus path
+    	String path = context.getPath();
     	//3. Compile using the dankcompiler
-    	
-        //First request the whole text in the editor
-        String source = textArea.getText();
-        System.out.println(source);
-        //Compile process
-        /*
-        //Dont say nothing to Julius i wanna change this
-        Lex.LexResult output = Lex.lex(source);
-        Parser parser = new Parser(output.tokens);
-        Parser.Program ast = parser.parseProgram();
-        System.out.println(ast);
-        Semantico.analyzeAndExport(ast, output.errors, parser.errors, "symbol_table.csv", "error_table.csv");
-        */
+    	context.getCompiler().start(path);
     }
-    public CompileAction(JTextArea textArea){
-        this.textArea = textArea;
+    public CompileAction(IDE context) {
+    	this.context = context;
     }
     @Override
     public void actionPerformed(ActionEvent e) {
