@@ -2,7 +2,7 @@ package dankcompiler.parsing.ast;
 
 import dankcompiler.parsing.tokens.Token;
 
-public class Node {
+public abstract class Node {
     protected Token value = null;
     public Node(){
     }
@@ -12,6 +12,5 @@ public class Node {
     public Token getValue(){
     	return this.value;
     }
-    //public abstract void appendNode(Node node);
-    //public abstract void appendNode(Node node, Node branch);
+    public abstract void accept(ASTVisitor visitor);
 }

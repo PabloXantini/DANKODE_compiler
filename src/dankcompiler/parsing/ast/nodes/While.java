@@ -1,5 +1,6 @@
 package dankcompiler.parsing.ast.nodes;
 
+import dankcompiler.parsing.ast.ASTVisitor;
 import dankcompiler.parsing.ast.Node;
 
 public class While extends Node {
@@ -18,4 +19,8 @@ public class While extends Node {
     public void setLoopBody(Node loopBody) {
         this.loopBody = loopBody;
     }
+	@Override
+	public void accept(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
 }

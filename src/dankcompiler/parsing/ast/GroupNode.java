@@ -13,11 +13,11 @@ public class GroupNode extends Node{
     public ArrayList<Node> getChildren(){
     	return this.children;
     }
-    /*
-    @Override
-    public void appendNode(Node node, Node branch) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'appendNode'");
-    }
-    */
+	@Override
+	public void accept(ASTVisitor visitor) {
+		visitor.visit(this);
+		for(Node child : children) {
+			child.accept(visitor);
+		}
+	}
 }

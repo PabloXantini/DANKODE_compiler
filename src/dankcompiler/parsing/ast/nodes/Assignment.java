@@ -1,5 +1,6 @@
 package dankcompiler.parsing.ast.nodes;
 
+import dankcompiler.parsing.ast.ASTVisitor;
 import dankcompiler.parsing.ast.Node;
 
 public class Assignment extends Node {
@@ -21,4 +22,8 @@ public class Assignment extends Node {
     public void setExpression(Expression expr){
         this.expr = expr;
     }
+	@Override
+	public void accept(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
 }

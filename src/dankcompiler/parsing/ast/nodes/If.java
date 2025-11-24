@@ -1,9 +1,10 @@
 package dankcompiler.parsing.ast.nodes;
 
+import dankcompiler.parsing.ast.ASTVisitor;
 import dankcompiler.parsing.ast.Node;
 
 //INSTRUCTIONS
-class If extends Node {
+public class If extends Node {
     private Expression Cond;
     private Node thenBody;
     private Node elseBody; 
@@ -26,4 +27,8 @@ class If extends Node {
     public void setElseBody(Node elseBody) {
         this.elseBody = elseBody;
     }
+	@Override
+	public void accept(ASTVisitor visitor) {
+		visitor.visit(this);		
+	}
 }

@@ -1,7 +1,7 @@
 package dankcompiler.utils;
 
-import dankcompiler.analysis.symbol.DataType;
-import dankcompiler.analysis.triplets.InstructionType;
+import dankcompiler.dankode.analysis.symbol.DataType;
+import dankcompiler.dankode.analysis.triplets.InstructionType;
 import dankcompiler.parsing.tokens.TokenType;
 
 public class TypeAdapter {

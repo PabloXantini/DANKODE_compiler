@@ -1,0 +1,7 @@
+nummypapuvar_abc_Def_1,papuvar_Aa_88;
+numptpapuvar#X_=2.5;
+charapapuvar_hey#="8";
+papuvar_abc_Def_1=66+papuvar_abc_Def_1+1*88;
+while(papuvar_abc_Def_1+1<=20+3||papuvar_abc_Def_1>0){
+papuvar_abc_Def_1=papuvar_abc_Def_1+1;
+}

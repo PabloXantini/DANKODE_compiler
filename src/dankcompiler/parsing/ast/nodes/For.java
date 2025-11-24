@@ -1,8 +1,9 @@
 package dankcompiler.parsing.ast.nodes;
 
+import dankcompiler.parsing.ast.ASTVisitor;
 import dankcompiler.parsing.ast.Node;
 
-class For extends Node {
+public class For extends Node {
     private Declaration decInit;
     private Assignment Init;
     private Expression Cond;
@@ -39,4 +40,8 @@ class For extends Node {
     public void setLoopBody(Node loopBody) {
         this.loopBody = loopBody;
     }
+	@Override
+	public void accept(ASTVisitor visitor) {
+		visitor.visit(this);	
+	}
 }

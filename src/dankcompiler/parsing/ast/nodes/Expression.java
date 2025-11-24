@@ -2,7 +2,8 @@ package dankcompiler.parsing.ast.nodes;
 
 import java.util.ArrayList;
 
-import dankcompiler.analysis.triplets.Tag;
+import dankcompiler.dankode.analysis.triplets.Tag;
+import dankcompiler.parsing.ast.ASTVisitor;
 import dankcompiler.parsing.ast.Node;
 import dankcompiler.parsing.tokens.Token;
 
@@ -33,4 +34,8 @@ public class Expression extends Node {
     public void setFalse(ArrayList<Tag> list){
     	this.falseList = list;
     }
+	@Override
+	public void accept(ASTVisitor visitor) {
+		visitor.visitExpression(this);
+	}
 }

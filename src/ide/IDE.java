@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.util.Set;
 
 import dankcompiler.CompilerTask;
-import dankcompiler.analysis.symbol.Symbol;
-import dankcompiler.analysis.symbol.SymbolTable;
-import dankcompiler.analysis.triplets.Triplet;
-import dankcompiler.errors.CompileError;
-import dankcompiler.messages.CompileMsgHandler;
+import dankcompiler.dankode.analysis.symbol.Symbol;
+import dankcompiler.dankode.analysis.symbol.SymbolTable;
+import dankcompiler.dankode.analysis.triplets.Triplet;
+import dankcompiler.dankode.errors.CompileError;
+import dankcompiler.dankode.messages.CompileMsgHandler;
 import gui.TextEditor;
 import gui.sections.OutputViewer;
 import gui.sections.ProblemsViewer;

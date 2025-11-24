@@ -1,5 +1,6 @@
 package dankcompiler.parsing.ast.nodes;
 
+import dankcompiler.parsing.ast.ASTVisitor;
 import dankcompiler.parsing.tokens.Token;
 
 public class UnaryOp extends Expression {
@@ -17,5 +18,9 @@ public class UnaryOp extends Expression {
     }
     public void setTerm(Expression term){
         this.term = term;
+    }
+    @Override
+    public void accept(ASTVisitor visitor) {
+    	visitor.visit(this);
     }
 }

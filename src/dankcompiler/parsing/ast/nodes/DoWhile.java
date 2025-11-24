@@ -1,8 +1,9 @@
 package dankcompiler.parsing.ast.nodes;
 
+import dankcompiler.parsing.ast.ASTVisitor;
 import dankcompiler.parsing.ast.Node;
 
-class DoWhile extends Node {
+public class DoWhile extends Node {
     private Expression thenCond;
     private Node loopBody;
     public DoWhile(){}
@@ -18,4 +19,7 @@ class DoWhile extends Node {
     public void setLoopBody(Node loopBody) {
         this.loopBody = loopBody;
     }
+	public void accept(ASTVisitor visitor) {
+		visitor.visit(this);	
+	}
 }

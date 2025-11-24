@@ -1,0 +1,14 @@
+package dankcompiler.dankode.errors;
+
+public enum CompileErrorCode {
+    LEXEM_UNKNOWN,
+    MISMATCH,
+    TOKEN_MISMATCH,
+    TOKEN_UNEXPECTED,
+    ID_UNEXPECTED,
+    VAR_UNDEFINED,
+    VAR_REDEFINITION,
+    OPERATOR_INVALID,
+    TYPE_INCOMPATIBILITY,
+    TYPE_EXPR_INCOMPATIBILITY
+}

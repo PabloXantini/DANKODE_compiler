@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
 
-import dankcompiler.errors.CompileErrorHandler;
-import dankcompiler.errors.CompileError;
-import dankcompiler.errors.CompileErrorCode;
-import dankcompiler.errors.CompileErrorType;
+import dankcompiler.dankode.errors.CompileErrorHandler;
+import dankcompiler.dankode.errors.CompileError;
+import dankcompiler.dankode.errors.CompileErrorCode;
+import dankcompiler.dankode.errors.CompileErrorType;
 import dankcompiler.parsing.rdutils.Cursor;
 import dankcompiler.parsing.tokens.Regex;
 import dankcompiler.parsing.tokens.Token;

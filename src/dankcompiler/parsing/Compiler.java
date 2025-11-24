@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
 
-import dankcompiler.messages.CompileMsgHandler;
-import dankcompiler.messages.MessageType;
-import dankcompiler.analysis.Analyzer;
-import dankcompiler.analysis.symbol.SymbolTable;
-import dankcompiler.analysis.triplets.Triplet;
-import dankcompiler.errors.CompileError;
+import dankcompiler.dankode.messages.CompileMsgHandler;
+import dankcompiler.dankode.messages.MessageType;
+import dankcompiler.dankode.analysis.Analyzer;
+import dankcompiler.dankode.analysis.symbol.SymbolTable;
+import dankcompiler.dankode.analysis.triplets.Triplet;
+import dankcompiler.dankode.errors.CompileError;
 import dankcompiler.parsing.rdutils.Cursor;
 import dankcompiler.parsing.rdutils.FileHandler;
 import dankcompiler.utils.CsvExporter;

@@ -1,5 +1,6 @@
 package dankcompiler.parsing.ast.nodes;
 
+import dankcompiler.parsing.ast.ASTVisitor;
 import dankcompiler.parsing.ast.Node;
 import dankcompiler.parsing.tokens.TokenType;
 
@@ -17,4 +18,8 @@ public class Declaration extends Node{
     public Variable getVariable(){
     	return this.var;
     }
+	@Override
+	public void accept(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
 }

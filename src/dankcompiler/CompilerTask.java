@@ -23,8 +23,8 @@ public class CompilerTask{
     	CompilerImpl.read();
     	CompilerImpl.analyze();
     	CompilerImpl.showErrors();
-    	CompilerImpl.showSymbolTable();
-    	CompilerImpl.showOutput();
+    	//CompilerImpl.showSymbolTable();
+    	//CompilerImpl.showOutput();
     	CompilerImpl.dumpDiagnostics();
     }
     public Compiler getImplementation() {
