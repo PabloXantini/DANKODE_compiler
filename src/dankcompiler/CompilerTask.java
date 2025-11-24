@@ -1,6 +1,6 @@
 package dankcompiler;
 
-import dankcompiler.parsing.Compiler;
+import dankcompiler.dankode.Compiler;
 import dankcompiler.parsing.rdutils.ReadMode;
 
 public class CompilerTask{    

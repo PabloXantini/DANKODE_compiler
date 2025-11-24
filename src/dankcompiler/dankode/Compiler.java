@@ -1,4 +1,4 @@
-package dankcompiler.parsing;
+package dankcompiler.dankode;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,6 +10,8 @@ import dankcompiler.dankode.analysis.Analyzer;
 import dankcompiler.dankode.analysis.symbol.SymbolTable;
 import dankcompiler.dankode.analysis.triplets.Triplet;
 import dankcompiler.dankode.errors.CompileError;
+import dankcompiler.parsing.Lexer;
+import dankcompiler.parsing.Parser;
 import dankcompiler.parsing.rdutils.Cursor;
 import dankcompiler.parsing.rdutils.FileHandler;
 import dankcompiler.utils.CsvExporter;
