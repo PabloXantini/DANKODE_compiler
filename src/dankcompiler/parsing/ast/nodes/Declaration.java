@@ -19,7 +19,7 @@ public class Declaration extends Node{
     	return this.var;
     }
 	@Override
-	public void accept(ASTVisitor visitor) {
-		visitor.visit(this);
+	public Node accept(ASTVisitor visitor) {
+		return visitor.visit(this);
 	}
 }

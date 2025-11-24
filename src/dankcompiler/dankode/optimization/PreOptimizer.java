@@ -1,4 +1,4 @@
-package dankcompiler.dankode.analysis;
+package dankcompiler.dankode.optimization;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;

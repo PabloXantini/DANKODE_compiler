@@ -19,7 +19,7 @@ public class DoWhile extends Node {
     public void setLoopBody(Node loopBody) {
         this.loopBody = loopBody;
     }
-	public void accept(ASTVisitor visitor) {
-		visitor.visit(this);	
+	public Node accept(ASTVisitor visitor) {
+		return visitor.visit(this);	
 	}
 }

@@ -23,7 +23,7 @@ public class Assignment extends Node {
         this.expr = expr;
     }
 	@Override
-	public void accept(ASTVisitor visitor) {
-		visitor.visit(this);
+	public Node accept(ASTVisitor visitor) {
+		return visitor.visit(this);
 	}
 }

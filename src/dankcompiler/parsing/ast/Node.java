@@ -12,5 +12,5 @@ public abstract class Node {
     public Token getValue(){
     	return this.value;
     }
-    public abstract void accept(ASTVisitor visitor);
+    public abstract Node accept(ASTVisitor visitor);
 }

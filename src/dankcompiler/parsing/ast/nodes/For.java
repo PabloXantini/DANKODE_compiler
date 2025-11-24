@@ -41,7 +41,7 @@ public class For extends Node {
         this.loopBody = loopBody;
     }
 	@Override
-	public void accept(ASTVisitor visitor) {
-		visitor.visit(this);	
+	public Node accept(ASTVisitor visitor) {
+		return visitor.visit(this);	
 	}
 }

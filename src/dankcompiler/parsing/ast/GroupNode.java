@@ -10,14 +10,14 @@ public class GroupNode extends Node{
     public void appendNode(Node node){
         this.children.add(node);
     }
+    public void setChildren(ArrayList<Node> children) {
+    	this.children = children;
+    }
     public ArrayList<Node> getChildren(){
     	return this.children;
     }
 	@Override
-	public void accept(ASTVisitor visitor) {
-		visitor.visit(this);
-		for(Node child : children) {
-			child.accept(visitor);
-		}
+	public Node accept(ASTVisitor visitor) {
+		return visitor.visit(this);
 	}
 }

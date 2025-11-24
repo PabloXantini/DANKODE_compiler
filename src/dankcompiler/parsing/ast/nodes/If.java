@@ -28,7 +28,7 @@ public class If extends Node {
         this.elseBody = elseBody;
     }
 	@Override
-	public void accept(ASTVisitor visitor) {
-		visitor.visit(this);		
+	public Node accept(ASTVisitor visitor) {
+		return visitor.visit(this);		
 	}
 }

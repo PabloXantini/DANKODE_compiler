@@ -1,6 +1,7 @@
 package dankcompiler.parsing.ast.nodes;
 
 import dankcompiler.parsing.ast.ASTVisitor;
+import dankcompiler.parsing.ast.Node;
 import dankcompiler.parsing.tokens.Token;
 
 public class BinaryOp extends Expression {
@@ -27,7 +28,7 @@ public class BinaryOp extends Expression {
         this.right_term = right;
     }
     @Override
-    public void accept(ASTVisitor visitor) {
-    	visitor.visit(this);
+    public Node accept(ASTVisitor visitor) {
+    	return visitor.visit(this);
     }
 }

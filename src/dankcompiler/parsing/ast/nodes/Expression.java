@@ -35,7 +35,7 @@ public class Expression extends Node {
     	this.falseList = list;
     }
 	@Override
-	public void accept(ASTVisitor visitor) {
-		visitor.visitExpression(this);
+	public Node accept(ASTVisitor visitor) {
+		return visitor.visitExpression(this);
 	}
 }
