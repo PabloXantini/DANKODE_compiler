@@ -24,19 +24,74 @@ import dankcompiler.parsing.ast.nodes.While;
  * This class will implement the DSE technique for discard unused assignments in a AST
  * */
 public class PreDSE extends ASTGeneralVisitor{
+	enum VisitState {
+		ASSIGNMENT_RECOLLECTION,
+		USED_VAR_RECOLLECTION,
+		ASSIGNMENT_DISCARD
+	};
+	private VisitState state;
 	private boolean inside_loop = false;
 	private AST ast;
 	private final Set<Variable> live_vars;
 	private final List<AssignmentInfo> assignments;
 	private final List<AssignmentInfo> dead_assignments;
-	public PreDSE(AST ast) {
-		this.ast = ast;
+	//PROCESS OF DSE
+	private void visitAssignments() {
+		this.ast.getRoot().accept(this);
+	}
+	private void revealDeadNodes() {
+	    if (assignments.isEmpty()) return;
+	    boolean changed;
+	    do {
+	        changed = false;
+	        AssignmentInfo last = assignments.getLast();
+	        Variable res = last.getNode().getVariable();
+	        live_vars.add(res);
+	        // backward pass
+	        for (int i = assignments.size()-1; i>=0; i--) {
+	            last = assignments.get(i);
+	            res = last.getNode().getVariable();
+	            if (!live_vars.contains(res) && !last.isLoopScoped()) {
+	                if (!last.isDead()) {
+	                    last.markAsDead(true);
+	                    dead_assignments.add(last);
+	                    changed = true;
+	                }
+	            } else {
+	                live_vars.remove(res);
+	                Expression expr = last.getNode().getExpression();
+	                if (expr != null) {
+	                    VisitState prev = state;
+	                    state = VisitState.USED_VAR_RECOLLECTION;
+	                    expr.accept(this);
+	                    state = prev;
+	                }
+	            }
+	        }
+	    } while (changed);
+	}
+	private void discardNodes() {
+		state=VisitState.ASSIGNMENT_DISCARD;
+		this.ast.setRoot(this.ast.getRoot().accept(this));
+	}
+	public PreDSE() {
+		this.state = VisitState.ASSIGNMENT_RECOLLECTION;
 		this.live_vars = new LinkedHashSet<Variable>();
 		this.assignments = new ArrayList<AssignmentInfo>();
 		this.dead_assignments = new ArrayList<AssignmentInfo>();
 	}
-	public void optimize() {
-		this.ast.setRoot(ast.getRoot().accept(this));
+	public void reset() {
+		inside_loop = false;
+		live_vars.clear();
+		assignments.clear();
+		dead_assignments.clear();
+		state=VisitState.ASSIGNMENT_RECOLLECTION;
+	}
+	public void optimize(AST ast) {
+		this.ast = ast;
+		visitAssignments();
+		revealDeadNodes();
+		discardNodes();
 	}
 	@Override
 	public Node visit(Declaration declaration) {
@@ -46,14 +101,35 @@ public class PreDSE extends ASTGeneralVisitor{
 
 	@Override
 	public Node visit(Assignment assignment) {
-		AssignmentInfo new_entry = new AssignmentInfo(assignment, inside_loop);
-		assignments.add(new_entry);
+		switch(this.state) {
+			case ASSIGNMENT_RECOLLECTION:
+					AssignmentInfo new_entry = new AssignmentInfo(assignment, inside_loop);
+					assignments.add(new_entry);
+				break;
+			case ASSIGNMENT_DISCARD:
+					for(AssignmentInfo assign : dead_assignments) {
+						if(assign.getNode() == assignment && !assign.isLoopScoped()) return null;
+					}
+				break;
+			default: break;
+		}
 		return assignment;
 	}
 
 	@Override
 	public Node visit(While whileNode) {
-		// TODO Auto-generated method stub
+		switch(this.state) {
+			case ASSIGNMENT_RECOLLECTION:
+				boolean prev = inside_loop;
+				inside_loop = true;
+				whileNode.getLoopBody().accept(this);
+				inside_loop = prev;
+				break;
+			case ASSIGNMENT_DISCARD:
+				Node body = whileNode.getLoopBody().accept(this);
+				whileNode.setLoopBody(body);
+			default: break;
+		}
 		return whileNode;
 	}
 
@@ -83,19 +159,25 @@ public class PreDSE extends ASTGeneralVisitor{
 
 	@Override
 	public Node visit(BinaryOp binary_op) {
-		// TODO Auto-generated method stub
+		binary_op.getLeftTerm().accept(this);
+		binary_op.getRightTerm().accept(this);
 		return binary_op;
 	}
 
 	@Override
 	public Node visit(UnaryOp unary_op) {
-		// TODO Auto-generated method stub
+		unary_op.getTerm().accept(this);
 		return unary_op;
 	}
 
 	@Override
 	public Node visit(Variable var) {
-		// TODO Auto-generated method stub
+		switch(this.state) {
+			case USED_VAR_RECOLLECTION:
+				live_vars.add(var);
+				break;
+		default: break;
+	}
 		return var;
 	}
 

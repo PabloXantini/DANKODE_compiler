@@ -21,6 +21,7 @@ public class CompilerTask{
     	CompilerImpl.clear();
     	CompilerImpl.setFilePath(file);
     	CompilerImpl.read();
+    	CompilerImpl.optimize();
     	CompilerImpl.analyze();
     	CompilerImpl.showErrors();
     	//CompilerImpl.showSymbolTable();

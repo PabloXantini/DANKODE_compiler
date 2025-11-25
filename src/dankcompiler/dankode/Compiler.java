@@ -6,6 +6,7 @@ import java.util.Set;
 
 import dankcompiler.dankode.messages.CompileMsgHandler;
 import dankcompiler.dankode.messages.MessageType;
+import dankcompiler.dankode.optimization.PreOptimizer;
 import dankcompiler.dankode.analysis.Analyzer;
 import dankcompiler.dankode.analysis.symbol.SymbolTable;
 import dankcompiler.dankode.analysis.triplets.Triplet;
@@ -21,6 +22,7 @@ public class Compiler extends FileHandler {
 	private Lexer lexer;
 	private Parser parser;
 	private Analyzer analyzer;
+	private PreOptimizer poptimizer;
 	//DATA OUTPUTS
 	private SymbolTable SymTable = null;
 	private ArrayList<Triplet> ICode = null;
@@ -32,6 +34,7 @@ public class Compiler extends FileHandler {
 		lexer = new Lexer(this.getCursor());
 		parser = new Parser(this.lexer);
 		analyzer = new Analyzer();
+		poptimizer = new PreOptimizer();
 	}
     public ArrayList<CompileError> getAllErrors(){
         return ErrorTable;
@@ -89,6 +92,7 @@ public class Compiler extends FileHandler {
     		analyzer.clean(); 
     	}
     	if (ICode != null) ICode.clear();
+    	
     }
     public void dumpDiagnostics() {
     	String symPath = "src/dankcompiler/temp/out_symbols.csv";
@@ -109,6 +113,9 @@ public class Compiler extends FileHandler {
     	analyzer.analyze(parser.getAST());
     	attachErrors(analyzer.getCurrentErrors());
     	ICode = analyzer.getCode();
+    }
+    public void optimize() {
+    	poptimizer.optimize(parser.getAST());
     }
 	@Override
 	public void process() throws IOException {
