@@ -16,4 +16,7 @@ public class CompileErrorHandler {
         long codetoken = generateCode(type, errorcode);
         return new CompileError(codetoken, type, lexem, line, column, errorcode, args);
     }
+    public static void reset() {
+    	errornum = 0;
+    }
 }

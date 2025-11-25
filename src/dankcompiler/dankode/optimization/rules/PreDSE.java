@@ -32,7 +32,7 @@ public class PreDSE extends ASTGeneralVisitor{
 	private VisitState state;
 	private boolean inside_loop = false;
 	private AST ast;
-	private final Set<Variable> live_vars;
+	private final Set<String> live_vars;
 	private final List<AssignmentInfo> assignments;
 	private final List<AssignmentInfo> dead_assignments;
 	//PROCESS OF DSE
@@ -45,12 +45,12 @@ public class PreDSE extends ASTGeneralVisitor{
 	    do {
 	        changed = false;
 	        AssignmentInfo last = assignments.getLast();
-	        Variable res = last.getNode().getVariable();
+	        String res = last.getNode().getVariable().getValue().getSymbol();
 	        live_vars.add(res);
 	        // backward pass
 	        for (int i = assignments.size()-1; i>=0; i--) {
 	            last = assignments.get(i);
-	            res = last.getNode().getVariable();
+	            res = last.getNode().getVariable().getValue().getSymbol();
 	            if (!live_vars.contains(res) && !last.isLoopScoped()) {
 	                if (!last.isDead()) {
 	                    last.markAsDead(true);
@@ -76,7 +76,7 @@ public class PreDSE extends ASTGeneralVisitor{
 	}
 	public PreDSE() {
 		this.state = VisitState.ASSIGNMENT_RECOLLECTION;
-		this.live_vars = new LinkedHashSet<Variable>();
+		this.live_vars = new LinkedHashSet<String>();
 		this.assignments = new ArrayList<AssignmentInfo>();
 		this.dead_assignments = new ArrayList<AssignmentInfo>();
 	}
@@ -174,7 +174,7 @@ public class PreDSE extends ASTGeneralVisitor{
 	public Node visit(Variable var) {
 		switch(this.state) {
 			case USED_VAR_RECOLLECTION:
-				live_vars.add(var);
+				live_vars.add(var.getValue().getSymbol());
 				break;
 		default: break;
 	}

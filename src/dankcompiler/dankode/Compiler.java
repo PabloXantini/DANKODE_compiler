@@ -11,6 +11,7 @@ import dankcompiler.dankode.analysis.Analyzer;
 import dankcompiler.dankode.analysis.symbol.SymbolTable;
 import dankcompiler.dankode.analysis.triplets.Triplet;
 import dankcompiler.dankode.errors.CompileError;
+import dankcompiler.dankode.errors.CompileErrorHandler;
 import dankcompiler.parsing.Lexer;
 import dankcompiler.parsing.Parser;
 import dankcompiler.parsing.rdutils.Cursor;
@@ -92,7 +93,8 @@ public class Compiler extends FileHandler {
     		analyzer.clean(); 
     	}
     	if (ICode != null) ICode.clear();
-    	
+    	poptimizer.clear();
+    	CompileErrorHandler.reset();
     }
     public void dumpDiagnostics() {
     	String symPath = "src/dankcompiler/temp/out_symbols.csv";
