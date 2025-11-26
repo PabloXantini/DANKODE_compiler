@@ -176,8 +176,8 @@ public class PreDSE extends ASTGeneralVisitor{
 			case USED_VAR_RECOLLECTION:
 				live_vars.add(var.getValue().getSymbol());
 				break;
-		default: break;
-	}
+			default: break;
+		}
 		return var;
 	}
 
