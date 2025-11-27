@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Stack;
 
 import dankcompiler.parsing.ast.AST;
 import dankcompiler.parsing.ast.ASTGeneralVisitor;
@@ -19,14 +20,16 @@ import dankcompiler.parsing.ast.nodes.If;
 import dankcompiler.parsing.ast.nodes.UnaryOp;
 import dankcompiler.parsing.ast.nodes.Variable;
 import dankcompiler.parsing.ast.nodes.While;
+import dankcompiler.parsing.operators.Operator;
 
 public class SyntaxExporter extends ASTGeneralVisitor{
 	private File TempOutput = null;
 	private PrintWriter writer = null;
-	boolean allow_separator = true;
+	private boolean allow_separator = true;
 	//flags
-	boolean permit_space = true;
-	boolean permit_br = false;
+	private boolean permit_space = true;
+	private boolean permit_br = false;
+	private final Stack<Integer> precedences; 
 	private void printSeparator() {
 		if(allow_separator) {
 			if(permit_space) writer.print(" ");
@@ -40,8 +43,14 @@ public class SyntaxExporter extends ASTGeneralVisitor{
 		permit_br = false;
 		permit_space = true;
 	}
+	private boolean checkPrecedences(int super_precedence, int precedence) {
+		if(super_precedence == Operator.ATOM_PRECEDENCE) return false;
+		return precedence < super_precedence;
+	}
 	public SyntaxExporter(File output) {
 		this.TempOutput = output;
+		this.precedences = new Stack<Integer>();
+		this.precedences.push(Integer.MAX_VALUE);
 	}
 	public PrintWriter getWriter() {
 		return writer;
@@ -120,13 +129,17 @@ public class SyntaxExporter extends ASTGeneralVisitor{
 
 	@Override
 	public Node visit(BinaryOp binary_op) {
-		writer.print("(");
+		int precedence = Operator.getPrecedence(binary_op.getOp());
+		boolean permitParentesis = checkPrecedences(precedences.peek(), precedence);
+		if (permitParentesis) writer.print("(");
+		precedences.push(precedence);	
 		binary_op.getLeftTerm().accept(this);
 		printSeparator();
 		writer.print(binary_op.getOp().getSymbol());
 		printSeparator();
 		binary_op.getRightTerm().accept(this);
-		writer.print(")");
+		precedences.pop();
+		if (permitParentesis) writer.print(")");
 		return binary_op;
 	}
 

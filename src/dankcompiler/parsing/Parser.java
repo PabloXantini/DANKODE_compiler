@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import dankcompiler.parsing.ast.AST;
 import dankcompiler.parsing.ast.Node;
 import dankcompiler.parsing.ast.nodes.*;
+import dankcompiler.parsing.operators.Operator;
 import dankcompiler.parsing.ast.GroupNode;
 import dankcompiler.dankode.errors.CompileErrorHandler;
 import dankcompiler.dankode.analysis.symbol.Symbol;
@@ -189,7 +190,7 @@ public class Parser {
     			node = parseWhile();
     			break;
     		case SEMICOLON:
-    			advanceToken(null);
+    			advanceToken(type);
     			break;
     		default:
     			handleUnexpectedToken();
@@ -376,17 +377,17 @@ public class Parser {
     	Expression right = null;
     	//peek
     	Token Look_A_Head = peekToken();
-    	while(Look_A_Head!=null && !isUnary(Look_A_Head) && getPrecedence(Look_A_Head.getType()) >= min_precedence) {
+    	while(Look_A_Head!=null && isBinary(Look_A_Head) && Operator.getPrecedence(Look_A_Head) >= min_precedence) {
     		//get operator
     		op = Look_A_Head;
-    		int op_precedence = getPrecedence(op.getType());    		
+    		int op_precedence = Operator.getPrecedence(op);
     		//advance
     		advanceToken(Look_A_Head.getType());
     		//RIGHT
     		right = parseMinorExpression();
     		//peek
     		Look_A_Head = peekToken();
-    		while(Look_A_Head!=null && !isUnary(Look_A_Head) && getPrecedence(Look_A_Head.getType()) > op_precedence) {
+    		while(Look_A_Head!=null && isBinary(Look_A_Head) && Operator.getPrecedence(Look_A_Head) > op_precedence) {
     			//RIGHT
     			right = parseExpression(right, op_precedence+1);
     			//peek
@@ -428,25 +429,14 @@ public class Parser {
     			return null;
     	}
     }
-    private boolean isUnary(Token token){
-        if(token==null) return false;
-        TokenType type = token.getType();
-        TokenCat cat = token.getCategory();
-        if(getPrecedence(type)>=0 && cat==TokenCat.OPERATOR){
+    private boolean isBinary(Token token) {
+    	TokenCat cat = token.getCategory();
+    	if(cat!=TokenCat.OPERATOR) {
+        	return false;
+        }
+    	if(Operator.getPrecedence(token)>Operator.MAX_BINARY_PRECEDENCE){
             return false;
-        }else{
-            return true;
         }
-    }
-    private int getPrecedence(TokenType type){
-        switch (type) {
-            case OR: return 0;
-            case AND: return 1;
-            case EQUAL, NONEQUAL: return 2;
-            case GTE, LTE, GT, LT: return 3;
-            case PLUS, MINUS: return 4;
-            case MUL, DIV, MOD: return 5;        
-            default: return -1;//UNARIO-TERM
-        }
+    	return true;
     }
 }

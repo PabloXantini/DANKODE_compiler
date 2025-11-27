@@ -1,8 +1,8 @@
 nummy papuvar_abc_Def_1;
-papuvar_abc_Def_1 = (10 * 7);
+papuvar_abc_Def_1 = 10 * 7;
 numpt papuvar#X_;
 chara papuvar_hey#;
-papuvar_abc_Def_1 = (papuvar_abc_Def_1 + 1);
-while(((papuvar_abc_Def_1 <= 20) && (papuvar_abc_Def_1 > 0))){
-papuvar_abc_Def_1 = (papuvar_abc_Def_1 + 1);
+papuvar_abc_Def_1 = papuvar_abc_Def_1 + 1;
+while(papuvar_abc_Def_1 <= 20 && papuvar_abc_Def_1 > 0){
+papuvar_abc_Def_1 = papuvar_abc_Def_1 + 1;
 }
