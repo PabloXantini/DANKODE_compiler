@@ -22,6 +22,12 @@ public class CompilerTask{
     	CompilerImpl.setFilePath(file);
     	CompilerImpl.read();
     	CompilerImpl.optimize();
+    	//RECOMPILE
+    	CompilerImpl.clear();
+    	CompilerImpl.setFilePath("src/dankcompiler/temp/out.dankc");
+    	CompilerImpl.read();
+    	//RECOMPILE
+    	CompilerImpl.optimize();
     	CompilerImpl.analyze();
     	CompilerImpl.showErrors();
     	//CompilerImpl.showSymbolTable();

@@ -33,6 +33,9 @@ public class FileHandler {
         this.read_mode = mode;
     }
     //Getters
+    public File getFileOutput() {
+    	return this.tempOutput;
+    }
     public PrintWriter getWriter(){
         return this.writer;
     }
@@ -111,28 +114,38 @@ public class FileHandler {
                 tempOutput.delete();
             }
             tempOutput = new File(directory, new_archive);
-            //System.out.println(tempOutput.getAbsolutePath());
             write = new FileWriter(tempOutput);
         } catch (IOException error) {
             System.out.println("Error when creating outputfile: "+error);
         }
         writer = new PrintWriter(write);
+        setupFileOutputBinding();
     }
     /**
+     *Override this method for setup configuration in output to your other programs
+     *It call with {@link #focusFileOutput(String, String)}
+     */
+    protected void setupFileOutputBinding(){}
+    /**
      *Override this method for make things at reading each line
-     *@param currentLine is the current Line when {@link #read()} method is called.
+     *@param cursor is the cursor when {@link #read()} method is called.
      *@return void
      *@see {@link #read()}
      */
-    public void doPerReadedLine(Cursor cursor){}
+    protected void doPerReadedLine(Cursor cursor){}
     /**
      *Override this method for make things when a file is fully read
+     *@param cursor is the cursor when {@link #read()} method is called.
      *@return void
      *@see {@link #read()} 
      */
-    public void doAtReadFinish(Cursor cursor){}
-
-    public void process() throws IOException{
+    protected void doAtReadFinish(Cursor cursor){}
+    /**
+     *Override this method for make thing when you read a file on lazy mode with {@link #read()} method.
+     *@return void
+     *@see {@link #read()}
+     */
+    protected void process() throws IOException{
         currentLine = readBuffer.readLine();
     }
 

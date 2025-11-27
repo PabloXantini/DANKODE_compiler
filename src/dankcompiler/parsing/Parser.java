@@ -244,13 +244,13 @@ public class Parser {
     }
     //DECLARATION: Declaration -> (Type)(Definitions)
     private void parseDeclaration(GroupNode supernode) throws IOException {
-    	TokenType type = parseDataType();
+    	Token type = parseDataType();
     	parseDefinitions(supernode, type);
     }
     //DATATYPES KEYWORD: (Type) -> [NUMMY] | [NUMPT] | [CHARA]
-    private TokenType parseDataType() throws IOException {
-    	TokenType type = peekToken().getType();
-    	switch(type) {
+    private Token parseDataType() throws IOException {
+    	Token type = peekToken();
+    	switch(type.getType()) {
     		case NUMMY, NUMPT, CHARA:
     			advanceToken(TokenType.EOF);
     			return type;
@@ -260,7 +260,7 @@ public class Parser {
     	}
     }
     //DEFINITIONS: Definitions -> (Definition)(MoreDefinitions)
-    private Node parseDefinitions(GroupNode supernode, TokenType data_type) throws IOException {
+    private Node parseDefinitions(GroupNode supernode, Token data_type) throws IOException {
     	Node node = null;
     	node = parseDefinition(supernode, data_type);
     	if(node!=null) supernode.appendNode(node);
@@ -268,8 +268,8 @@ public class Parser {
     	return node;
     }
     //DEFINTION: Definition -> [ID](DefinitionAssignment)
-    private Assignment parseDefinition(GroupNode supernode, TokenType data_type) throws IOException { 
-    	Token ID = expectToken(data_type, TokenType.ID, CompileErrorCode.ID_UNEXPECTED);
+    private Assignment parseDefinition(GroupNode supernode, Token data_type) throws IOException { 
+    	Token ID = expectToken(data_type.getType(), TokenType.ID, CompileErrorCode.ID_UNEXPECTED);
     	Variable var = new Variable(ID);
     	Declaration dec_node = new Declaration(data_type, var);
     	supernode.appendNode(dec_node);
@@ -283,7 +283,7 @@ public class Parser {
     	return null;
     }
     //MORE_DEFINITIONS: MoreDefinitions -> () | [,](Definitions)
-    private void parseMoreDefinitions(GroupNode supernode, TokenType data_type) throws IOException{
+    private void parseMoreDefinitions(GroupNode supernode, Token data_type) throws IOException{
     	TokenType type = peekToken().getType();
     	switch(type) {
     		case COMMA:

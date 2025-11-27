@@ -17,6 +17,7 @@ import dankcompiler.parsing.Parser;
 import dankcompiler.parsing.rdutils.Cursor;
 import dankcompiler.parsing.rdutils.FileHandler;
 import dankcompiler.utils.CsvExporter;
+import dankcompiler.utils.SyntaxExporter;
 
 public class Compiler extends FileHandler {
 	private CompileMsgHandler MsgHandler;
@@ -24,6 +25,8 @@ public class Compiler extends FileHandler {
 	private Parser parser;
 	private Analyzer analyzer;
 	private PreOptimizer poptimizer;
+	//EXPORTERS
+	private SyntaxExporter syntax_exporter = null;
 	//DATA OUTPUTS
 	private SymbolTable SymTable = null;
 	private ArrayList<Triplet> ICode = null;
@@ -118,14 +121,20 @@ public class Compiler extends FileHandler {
     }
     public void optimize() {
     	poptimizer.optimize(parser.getAST());
+    	syntax_exporter.export(parser.getAST());
+    }
+    @Override
+    protected void setupFileOutputBinding() {
+    	//call exporters with the same output for each phase
+    	syntax_exporter = new SyntaxExporter(getFileOutput());
     }
 	@Override
-	public void process() throws IOException {
+	protected void process() throws IOException {
 		//parser.reset();
 		parser.parse();
 	}
 	@Override
-	public void doAtReadFinish(Cursor cursor) {
+	protected void doAtReadFinish(Cursor cursor) {
 		attachErrors(parser.getCurrentErrors());
 		SymTable = parser.getSymbolTable();
 		analyzer.setSymbolTable(SymTable);

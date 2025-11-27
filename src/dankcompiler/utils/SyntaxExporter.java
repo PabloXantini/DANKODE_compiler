@@ -1,7 +1,11 @@
 package dankcompiler.utils;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 
+import dankcompiler.parsing.ast.AST;
 import dankcompiler.parsing.ast.ASTGeneralVisitor;
 import dankcompiler.parsing.ast.Node;
 import dankcompiler.parsing.ast.nodes.Assignment;
@@ -18,25 +22,77 @@ import dankcompiler.parsing.ast.nodes.While;
 
 public class SyntaxExporter extends ASTGeneralVisitor{
 	private File TempOutput = null;
-	public SyntaxExporter() {
-		
+	private PrintWriter writer = null;
+	boolean allow_separator = true;
+	//flags
+	boolean permit_space = true;
+	boolean permit_br = false;
+	private void printSeparator() {
+		if(allow_separator) {
+			if(permit_space) writer.print(" ");
+			if(permit_br) writer.println();
+		}
+	}
+	private void nextLine() {
+		permit_br = true;
+		permit_space = false;
+		printSeparator();
+		permit_br = false;
+		permit_space = true;
 	}
 	public SyntaxExporter(File output) {
 		this.TempOutput = output;
 	}
+	public PrintWriter getWriter() {
+		return writer;
+	}
+	public void setWriter(PrintWriter writer) {
+		this.writer = writer;
+	}
+	public void export(AST ast){
+		FileWriter write = null;
+		try {
+			write = new FileWriter(TempOutput);	
+		} catch (IOException e) {
+			System.out.println("Error when binding outputfile: "+ e);
+		}
+		writer = new PrintWriter(write);
+		ast.getRoot().accept(this);
+		writer.close();
+	}
 	@Override
 	public Node visit(Declaration declaration) {
-		// TODO Auto-generated method stub
+		writer.print(declaration.getDefType().getSymbol());
+		printSeparator();
+		writer.print(declaration.getVariable().getValue().getSymbol());
+		writer.print(";");
+		nextLine();
+		writer.flush();
 		return declaration;
 	}
 	@Override
 	public Node visit(Assignment assignment) {
-		// TODO Auto-generated method stub
+		writer.print(assignment.getVariable().getValue().getSymbol());
+		printSeparator();
+		writer.print("=");
+		printSeparator();
+		assignment.getExpression().accept(this);
+		writer.print(";");
+		nextLine();
+		writer.flush();
 		return assignment;
 	}
 	@Override
 	public Node visit(While whileNode) {
-		// TODO Auto-generated method stub
+		writer.print("while");
+		writer.print("(");
+		whileNode.getAtCondition().accept(this);
+		writer.print(")");
+		writer.print("{");
+		nextLine();
+		whileNode.getLoopBody().accept(this);
+		writer.print("}");
+		nextLine();
 		return whileNode;
 	}
 	@Override
@@ -64,25 +120,32 @@ public class SyntaxExporter extends ASTGeneralVisitor{
 
 	@Override
 	public Node visit(BinaryOp binary_op) {
-		// TODO Auto-generated method stub
+		writer.print("(");
+		binary_op.getLeftTerm().accept(this);
+		printSeparator();
+		writer.print(binary_op.getOp().getSymbol());
+		printSeparator();
+		binary_op.getRightTerm().accept(this);
+		writer.print(")");
 		return binary_op;
 	}
 
 	@Override
 	public Node visit(UnaryOp unary_op) {
-		// TODO Auto-generated method stub
+		writer.print(unary_op.getOp().getSymbol());
+		unary_op.getTerm().accept(this);
 		return unary_op;
 	}
 
 	@Override
 	public Node visit(Variable var) {
-		// TODO Auto-generated method stub
+		writer.print(var.getValue().getSymbol());
 		return var;
 	}
 
 	@Override
 	public Node visit(Constant constant) {
-		// TODO Auto-generated method stub
+		writer.print(constant.getValue().getSymbol());
 		return constant;
 	}
 }
