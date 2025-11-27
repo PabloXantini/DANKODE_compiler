@@ -9,7 +9,7 @@ public class PreOptimizer {
 		predse = new PreDSE();
 	}
 	public void clear() {
-		
+		predse.reset();
 	}
 	public void optimize(AST ast) {
 		predse.optimize(ast);
