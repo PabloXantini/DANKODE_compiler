@@ -6,6 +6,8 @@ public class CFGEdge {
 	public CFGEdge(CFGNode previous, CFGNode next){
 		this.previous = previous;
 		this.next = next;
+		this.previous.getSucc().add(next);
+		this.next.getPred().add(previous);
 	}
 	public CFGNode getPrevious() {
 		return previous;

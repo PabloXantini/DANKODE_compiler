@@ -25,8 +25,9 @@ import dankcompiler.parsing.operators.Operator;
 public class SyntaxExporter extends ASTGeneralVisitor{
 	private File TempOutput = null;
 	private PrintWriter writer = null;
+	//General Flags
 	private boolean allow_separator = true;
-	//flags
+	//Flags
 	private boolean permit_space = true;
 	private boolean permit_br = false;
 	private final Stack<Integer> precedences; 

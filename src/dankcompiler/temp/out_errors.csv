@@ -1,2 +1,3 @@
-summary,"No se encontraron errores."
+summary,"Se encontraron errores:"
 code,type,lexem,line,column,errorcode,args,message
+"3205188333","SEMANT","papuvar_hey#","6","33","TYPE_INCOMPATIBILITY","papuvar_hey#;CHARA;papuvar_abc_Def_1;NUMMY","El término ""papuvar_hey#"" (CHARA) es incompatible con el tipo de la variable ""papuvar_abc_Def_1"" (NUMMY)"
