@@ -17,8 +17,22 @@ import dankcompiler.parsing.ast.nodes.Variable;
 import dankcompiler.parsing.ast.nodes.While;
 
 public class CFGBuilder extends ASTGeneralVisitor{
+	enum CFGBuilderState{
+		CFG_GENERATION,
+		DEF_USE_GENERATION
+	}
 	private CFG cfg;
 	private CFGNode currentNode;
+	private CFGBuilderState state;
+	private void revealDefUse() {
+		if(cfg == null) return;
+		for(CFGNode node : cfg.getNodes()) {
+			currentNode = node;
+			for (Node child : node.getChildren()) {
+				child.accept(this);
+			}
+		}
+	}
 	public CFGBuilder(){
 		cfg = new CFG();
 		//Create the entryNode
@@ -28,7 +42,11 @@ public class CFGBuilder extends ASTGeneralVisitor{
 		return cfg;
 	}
 	public void generateCFG(AST ast) {
+		state = CFGBuilderState.CFG_GENERATION;
 		ast.getRoot().accept(this);
+		cfg.setExit(currentNode);
+		state = CFGBuilderState.DEF_USE_GENERATION;
+		revealDefUse();
 		System.out.println(".");
 	}
 	@Override
@@ -46,26 +64,45 @@ public class CFGBuilder extends ASTGeneralVisitor{
 	}
 	@Override
 	public Node visit(Assignment assignment) {
-		currentNode.appendNode(assignment);
+		switch(state) {
+			case CFG_GENERATION:				
+				currentNode.appendNode(assignment);
+				break;
+			case DEF_USE_GENERATION:
+				Variable var = assignment.getVariable();
+				String varname = var.getValue().getSymbol();
+				Expression expr = assignment.getExpression();
+				expr.accept(this);				
+				currentNode.getDef().add(varname);
+				break;
+			default: break;
+		}
 		return assignment;
 	}
 	@Override
 	public Node visit(While whileNode) {
-		//BASIC BLOCK OF CONDITION
-		CFGNode conditional = cfg.createNode();
-		cfg.createEdge(currentNode, conditional);
-		currentNode = conditional;
-		whileNode.getAtCondition().accept(this);
-		//BASIC BLOCK OF BODY
-		CFGNode body = cfg.createNode();
-		cfg.createEdge(conditional, body);
-		currentNode = body;
-		whileNode.getLoopBody().accept(this);
-		cfg.createEdge(currentNode, conditional);
-		//BASIC BLOCK OF EXIT
-		CFGNode exit = cfg.createNode();
-		cfg.createEdge(conditional, exit);
-		currentNode = exit;
+		switch(state) {
+			case CFG_GENERATION:
+				//BASIC BLOCK OF CONDITION
+				CFGNode conditional = cfg.createNode();
+				cfg.createEdge(currentNode, conditional);
+				currentNode = conditional;
+				currentNode.appendNode(whileNode.getAtCondition());
+				//BASIC BLOCK OF BODY
+				CFGNode body = cfg.createNode();
+				cfg.createEdge(conditional, body);
+				currentNode = body;
+				whileNode.getLoopBody().accept(this);
+				cfg.createEdge(currentNode, conditional);
+				//BASIC BLOCK OF EXIT
+				CFGNode exit = cfg.createNode();
+				cfg.createEdge(conditional, exit);
+				currentNode = exit;
+				break;
+			case DEF_USE_GENERATION:
+				break;
+			default: break;
+		}
 		return whileNode;
 	}
 	@Override
@@ -90,22 +127,39 @@ public class CFGBuilder extends ASTGeneralVisitor{
 	}
 	@Override
 	public Node visit(BinaryOp binary_op) {
-		// TODO Auto-generated method stub
-		return null;
+		switch(state) {
+			case DEF_USE_GENERATION:
+				binary_op.getLeftTerm().accept(this);
+				binary_op.getRightTerm().accept(this);
+				break;
+			default: break;
+		}
+		return binary_op;
 	}
 	@Override
 	public Node visit(UnaryOp unary_op) {
-		// TODO Auto-generated method stub
+		switch(state) {
+			case DEF_USE_GENERATION:
+				unary_op.getTerm().accept(this);
+				break;
+			default: break;
+		}
 		return unary_op;
 	}
 	@Override
 	public Node visit(Variable var) {
-		// TODO Auto-generated method stub
+		switch(state) {
+			case DEF_USE_GENERATION:
+				String varname = var.getValue().getSymbol();
+				if (!currentNode.getDef().contains(varname)) 
+					currentNode.getUse().add(varname);
+				break;
+			default: break;
+		}
 		return var;
 	}
 	@Override
 	public Node visit(Constant constant) {
-		// TODO Auto-generated method stub
 		return constant;
 	}
 }
