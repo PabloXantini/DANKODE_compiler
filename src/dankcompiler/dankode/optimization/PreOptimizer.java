@@ -1,16 +1,24 @@
 package dankcompiler.dankode.optimization;
 
 import dankcompiler.dankode.optimization.rules.PreDSE;
+import dankcompiler.dankode.optimization.rules.preanalysis.LivenessAnalyzer;
+import dankcompiler.dankode.optimization.rules.precfg.CFGBuilder;
 import dankcompiler.parsing.ast.AST;
 
 public class PreOptimizer {
-	private PreDSE predse;
+	private CFGBuilder cfgBuilder;
+	private LivenessAnalyzer liveAnalyzer;
+	private PreDSE preDSE;
 	public PreOptimizer() {
-		predse = new PreDSE();
+		cfgBuilder = new CFGBuilder();
+		liveAnalyzer = new LivenessAnalyzer();
+		preDSE = new PreDSE();
 	}
 	public void clear() {
 	}
 	public void optimize(AST ast) {
-		predse.optimize(ast);
+		cfgBuilder.generateCFG(ast);
+		liveAnalyzer.analyze(cfgBuilder.getCFG());
+		preDSE.optimize(ast, cfgBuilder.getCFG());
 	}
 }

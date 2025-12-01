@@ -4,4 +4,4 @@ chara papuvar_hey# = "hola";
 papuvar_abc_Def_1 = papuvar_abc_Def_1 + 1;
 while (papuvar_abc_Def_1 <= 20 && papuvar_abc_Def_1 > 0 ) {
 	papuvar_abc_Def_1 = papuvar_abc_Def_1 + 1;
-}
+} 

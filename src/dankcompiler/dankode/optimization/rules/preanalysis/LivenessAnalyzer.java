@@ -16,7 +16,6 @@ public class LivenessAnalyzer {
 			changed = false;
 			for(CFGNode node : cfg.getNodes()) {
 				if(node.changeInOut()) {
-					System.out.println("Hay cambios");
 					changed = true;
 				}
 			}

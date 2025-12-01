@@ -5,8 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import dankcompiler.dankode.optimization.rules.preanalysis.LivenessAnalyzer;
-import dankcompiler.dankode.optimization.rules.precfg.CFGBuilder;
+import dankcompiler.dankode.optimization.rules.precfg.CFG;
 import dankcompiler.dankode.optimization.rules.precfg.CFGNode;
 import dankcompiler.parsing.ast.AST;
 import dankcompiler.parsing.ast.ASTGeneralVisitor;
@@ -25,17 +24,14 @@ import dankcompiler.parsing.ast.nodes.Variable;
 import dankcompiler.parsing.ast.nodes.While;
 
 public class PreDSE extends ASTGeneralVisitor {
-	//GLOBAL? MAY BE NEEDS A CONTEXT
-	private CFGBuilder cfgBuilder;
-	private LivenessAnalyzer liveAnalyzer;
 	//LOCAL
 	private AST ast_ref;
 	private DeadStatementPrunner prunner;
 	private Set<String> live = null;
 	private List<Node> dead_statements;
-	private void makeDataStoreElimination() {
-		if (cfgBuilder.getCFG() == null) return;
-		for(CFGNode block : cfgBuilder.getCFG().getNodes()) {
+	private void makeDataStoreElimination(CFG cfg) {
+		if (cfg == null) return;
+		for(CFGNode block : cfg.getNodes()) {
 			this.live = new HashSet<String>(block.getOut());
 			for(int i = block.getChildren().size()-1 ; i>=0; i--) {
 				Node updated_node = block.getChildren().get(i).accept(this);
@@ -49,18 +45,12 @@ public class PreDSE extends ASTGeneralVisitor {
 		this.ast_ref.setRoot(this.ast_ref.getRoot().accept(prunner));
 	}
 	public PreDSE() {
-		cfgBuilder = new CFGBuilder();
-		liveAnalyzer = new LivenessAnalyzer();
-		//LOCAL
 		prunner = new DeadStatementPrunner();
 		dead_statements = new ArrayList<Node>();
 	}
-	public void optimize(AST ast) {
-		cfgBuilder.generateCFG(ast);
-		liveAnalyzer.analyze(cfgBuilder.getCFG());
-		makeDataStoreElimination();
+	public void optimize(AST ast, CFG cfg) {
+		makeDataStoreElimination(cfg);
 		applyChangesOnAST(ast);
-		System.out.println(".");
 	}
 	//VISIT METHODS
 	@Override
@@ -131,15 +121,15 @@ public class PreDSE extends ASTGeneralVisitor {
 }
 
 class DeadStatementPrunner extends ASTPrunner {
-	private List<Node> dead_assignments;
+	private List<Node> dead_statements;
 	public DeadStatementPrunner() {
 	}
 	public void setDeadList(List<Node> dead_nodes) {
-		this.dead_assignments = dead_nodes;
+		this.dead_statements = dead_nodes;
 	}
 	@Override
 	public boolean mustBePruned(Node node) {
-		if(dead_assignments.contains(node)) return true;
+		if(dead_statements.contains(node)) return true;
 		return false;
 	}
 }
