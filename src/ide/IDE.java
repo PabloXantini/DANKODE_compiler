@@ -94,6 +94,7 @@ public class IDE {
 	}
 	public void showOutput() {
 		refOut.clear();
+		if(compiler.getImplementation().getOutput() == null) return;
 		for(Triplet triplet : compiler.getImplementation().getOutput()) {
 			refOut.addRow(triplet.getIndex(), triplet.getInstruction().name() ,triplet.getIdObject(), triplet.getIdSource());
 		}

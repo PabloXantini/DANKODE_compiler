@@ -35,27 +35,26 @@ public class CFGBuilder extends ASTGeneralVisitor{
 	}
 	public CFGBuilder(){
 		cfg = new CFG();
-		//Create the entryNode
-		currentNode = cfg.createNode();
 	}
 	public CFG getCFG() {
 		return cfg;
 	}
-	public void generateCFG(AST ast) {
+	public CFG generateCFG(AST ast) {
+		cfg.reset();
+		//Create the entryNode
+		currentNode = cfg.createNode();
 		state = CFGBuilderState.CFG_GENERATION;
 		ast.getRoot().accept(this);
 		cfg.setExit(currentNode);
 		state = CFGBuilderState.DEF_USE_GENERATION;
 		revealDefUse();
-		System.out.println(".");
+		return this.cfg;
 	}
 	@Override
 	public Node visit(GroupNode groupnode) {
-		System.out.println("Bloque");
 		for (Node child : groupnode.getChildren()) {
 			child.accept(this);
 		}
-		System.out.println("Bloque de salida");
 		return groupnode;
 	}
 	@Override

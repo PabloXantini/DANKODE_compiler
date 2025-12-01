@@ -56,4 +56,10 @@ public class CFG {
 	public void addEdge(CFGEdge edge) {
 		edges.add(edge);
 	}
+	public void reset() {
+		nodes.clear();
+		edges.clear();
+		entry = null;
+		exit = null;
+	}
 }
