@@ -28,6 +28,8 @@ public class CFGBuilder extends ASTGeneralVisitor{
 		if(cfg == null) return;
 		for(CFGNode node : cfg.getNodes()) {
 			currentNode = node;
+			currentNode.getDef().clear();
+			currentNode.getUse().clear();
 			for (Node child : node.getChildren()) {
 				child.accept(this);
 			}
@@ -49,6 +51,12 @@ public class CFGBuilder extends ASTGeneralVisitor{
 		state = CFGBuilderState.DEF_USE_GENERATION;
 		revealDefUse();
 		return this.cfg;
+	}
+	public void updateRefs() {
+		CFGBuilderState previous = state;
+		state = CFGBuilderState.DEF_USE_GENERATION;
+		revealDefUse();
+		state = previous;
 	}
 	@Override
 	public Node visit(GroupNode groupnode) {

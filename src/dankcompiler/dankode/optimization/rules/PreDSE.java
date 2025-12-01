@@ -8,22 +8,16 @@ import java.util.Set;
 import dankcompiler.dankode.optimization.rules.precfg.CFG;
 import dankcompiler.dankode.optimization.rules.precfg.CFGNode;
 import dankcompiler.parsing.ast.AST;
-import dankcompiler.parsing.ast.ASTGeneralVisitor;
 import dankcompiler.parsing.ast.ASTPrunner;
+import dankcompiler.parsing.ast.ASTSpecVisitor;
 import dankcompiler.parsing.ast.Node;
 import dankcompiler.parsing.ast.nodes.Assignment;
 import dankcompiler.parsing.ast.nodes.BinaryOp;
-import dankcompiler.parsing.ast.nodes.Constant;
-import dankcompiler.parsing.ast.nodes.Declaration;
-import dankcompiler.parsing.ast.nodes.DoWhile;
 import dankcompiler.parsing.ast.nodes.Expression;
-import dankcompiler.parsing.ast.nodes.For;
-import dankcompiler.parsing.ast.nodes.If;
 import dankcompiler.parsing.ast.nodes.UnaryOp;
 import dankcompiler.parsing.ast.nodes.Variable;
-import dankcompiler.parsing.ast.nodes.While;
 
-public class PreDSE extends ASTGeneralVisitor {
+public class PreDSE extends ASTSpecVisitor {
 	//LOCAL
 	private AST ast_ref;
 	private DeadStatementPrunner prunner;
@@ -54,11 +48,6 @@ public class PreDSE extends ASTGeneralVisitor {
 	}
 	//VISIT METHODS
 	@Override
-	public Node visit(Declaration declaration) {
-		// TODO Auto-generated method stub
-		return declaration;
-	}
-	@Override
 	public Node visit(Assignment assignment) {
 		Variable var = assignment.getVariable();
 		Expression expr = assignment.getExpression();
@@ -71,31 +60,6 @@ public class PreDSE extends ASTGeneralVisitor {
 			expr.accept(this);
 		}
 		return assignment;
-	}
-	@Override
-	public Node visit(While whileNode) {
-		// TODO Auto-generated method stub
-		return whileNode;
-	}
-	@Override
-	public Node visit(DoWhile dowhileNode) {
-		// TODO Auto-generated method stub
-		return dowhileNode;
-	}
-	@Override
-	public Node visit(If ifNode) {
-		// TODO Auto-generated method stub
-		return ifNode;
-	}
-	@Override
-	public Node visit(For forNode) {
-		// TODO Auto-generated method stub
-		return forNode;
-	}
-	@Override
-	public Node visitExpression(Expression expression) {
-		// TODO Auto-generated method stub
-		return expression;
 	}
 	@Override
 	public Node visit(BinaryOp binary_op) {
@@ -112,11 +76,6 @@ public class PreDSE extends ASTGeneralVisitor {
 	public Node visit(Variable var) {
 		live.add(var.getValue().getSymbol());
 		return var;
-	}
-	@Override
-	public Node visit(Constant constant) {
-		// TODO Auto-generated method stub
-		return constant;
 	}
 }
 
