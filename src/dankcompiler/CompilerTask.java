@@ -29,6 +29,9 @@ public class CompilerTask{
     	//CONTINUE COMPILING
     	CompilerImpl.analyze();
     	CompilerImpl.showErrors();
+    	//EXPORT
+    	CompilerImpl.setFilePath(file);
+    	CompilerImpl.build();
     	/*
     	//CompilerImpl.showSymbolTable();
     	//CompilerImpl.showOutput();

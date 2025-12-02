@@ -96,7 +96,10 @@ public class IDE {
 		refOut.clear();
 		if(compiler.getImplementation().getOutput() == null) return;
 		for(Triplet triplet : compiler.getImplementation().getOutput()) {
-			refOut.addRow(triplet.getIndex(), triplet.getInstruction().name() ,triplet.getIdObject(), triplet.getIdSource());
+			//refOut.addRow(triplet.getIndex(), triplet.getInstruction().name() ,triplet.getIdObject(), triplet.getIdSource());
+			String obj = triplet.getObject() == null ? "" : triplet.getObject().getValue();
+			String src = triplet.getSource() == null ? "" : triplet.getSource().getValue();
+			refOut.addRow(triplet.getIndex(), triplet.getInstruction().name() , obj, src);
 		}
 	}
 }

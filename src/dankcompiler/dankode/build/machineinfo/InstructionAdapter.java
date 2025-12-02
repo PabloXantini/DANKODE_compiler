@@ -5,6 +5,7 @@ import dankcompiler.dankode.analysis.triplets.InstructionType;
 public class InstructionAdapter {
 	public static String castx86(InstructionType instruction) {
 		switch(instruction) {
+			case MOV: return "MOV"; 
 			case ADD: return "ADD";
 			case SUB: return "SUB";
 			case MUL: return "MUL";

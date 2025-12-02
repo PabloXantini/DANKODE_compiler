@@ -1,6 +1,7 @@
 package dankcompiler.dankode.build.machineinfo;
 
 public class Register {
+	private Register superReg = null;
 	private final RegisterType type;
 	private final String name;
 	private final int size;
@@ -17,5 +18,11 @@ public class Register {
 	}
 	public int getSize() {
 		return size;
+	}
+	public Register getSuper() {
+		return superReg;
+	}
+	public void setSuper(Register reg) {
+		this.superReg = reg;
 	}
 }

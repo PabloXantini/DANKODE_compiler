@@ -28,7 +28,8 @@ public class Analyzer {
 	//RESOURCES
 	private boolean verbosed = false;
 	private AST ast;
-	private final IGenerator Generator;
+	//private final IGenerator Generator;
+	private final IRGenerator Generator;
 	/*
 	 * OUTPUTS
 	 */
@@ -39,7 +40,8 @@ public class Analyzer {
 	//ERRORS
 	private final ArrayList<CompileError> CurrentErrors;
 	public Analyzer() {
-		Generator = new IGenerator();
+		//Generator = new IGenerator();
+		Generator = new IRGenerator();
 		MainSymbolTable = new SymbolTable(); 
 		CurrentErrors = new ArrayList<CompileError>();
 	}
@@ -137,7 +139,8 @@ public class Analyzer {
 	}
 	private void callGenerator() {
 		//traverseAST(ast.getRoot());
-		Generator.check(ast.getRoot());
+		//Generator.check(ast.getRoot());
+		Generator.generate(ast);
 		setCode(Generator.getOutput());
 	}
 	private void handleState(AnalysisState state, Node node){

@@ -30,9 +30,7 @@ public class CFGBuilder extends ASTGeneralVisitor{
 			currentNode = node;
 			currentNode.getDef().clear();
 			currentNode.getUse().clear();
-			for (Node child : node.getChildren()) {
-				child.accept(this);
-			}
+			node.accept(this);
 		}
 	}
 	public CFGBuilder(){

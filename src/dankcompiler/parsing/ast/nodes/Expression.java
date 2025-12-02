@@ -2,7 +2,7 @@ package dankcompiler.parsing.ast.nodes;
 
 import java.util.ArrayList;
 
-import dankcompiler.dankode.analysis.triplets.Tag;
+import dankcompiler.dankode.analysis.triplets.args.Tag;
 import dankcompiler.parsing.ast.ASTVisitor;
 import dankcompiler.parsing.ast.Node;
 import dankcompiler.parsing.tokens.Token;

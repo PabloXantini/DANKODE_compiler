@@ -3,6 +3,7 @@ nummy papuvar_b_;
 nummy papuvar_k_;
 nummy papuvar_m_;
 nummy papuvar_j_;
+nummy papuvar_i_;
 nummy papuvar_h_;
 papuvar_h_ = papuvar_a_ + papuvar_k_;
 while (papuvar_m_ < 7){
@@ -10,3 +11,4 @@ while (papuvar_m_ < 7){
 	papuvar_k_ = papuvar_j_ + 2;
 	papuvar_m_ = papuvar_m_ * papuvar_h_ + papuvar_j_; 
 } 
+ 

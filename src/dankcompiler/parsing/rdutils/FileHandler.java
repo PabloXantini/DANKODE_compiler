@@ -33,6 +33,9 @@ public class FileHandler {
         this.read_mode = mode;
     }
     //Getters
+    public String getFilePath() {
+    	return this.filepath;
+    }
     public File getFileOutput() {
     	return this.tempOutput;
     }

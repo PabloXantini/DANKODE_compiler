@@ -10,6 +10,7 @@ import dankcompiler.dankode.optimization.PreOptimizer;
 import dankcompiler.dankode.analysis.Analyzer;
 import dankcompiler.dankode.analysis.symbol.SymbolTable;
 import dankcompiler.dankode.analysis.triplets.Triplet;
+import dankcompiler.dankode.build.ASMx86Exporter;
 import dankcompiler.dankode.errors.CompileError;
 import dankcompiler.dankode.errors.CompileErrorHandler;
 import dankcompiler.parsing.Lexer;
@@ -27,6 +28,8 @@ public class Compiler extends FileHandler {
 	private PreOptimizer poptimizer;
 	//EXPORTERS
 	private SyntaxExporter syntax_exporter = null;
+	// -> HERE MUST BE HAVE A EXPORT SYSTEM
+	private ASMx86Exporter output_exporter = null;
 	//DATA OUTPUTS
 	private SymbolTable SymTable = null;
 	private ArrayList<Triplet> ICode = null;
@@ -39,6 +42,8 @@ public class Compiler extends FileHandler {
 		parser = new Parser(this.lexer);
 		analyzer = new Analyzer();
 		poptimizer = new PreOptimizer();
+		
+		output_exporter = new ASMx86Exporter();
 	}
     public ArrayList<CompileError> getAllErrors(){
         return ErrorTable;
@@ -122,6 +127,10 @@ public class Compiler extends FileHandler {
     public void optimize() {
     	poptimizer.optimize(parser.getAST());
     	syntax_exporter.export(parser.getAST());
+    }
+    public void build() {
+    	output_exporter.setCodeInput(ICode);
+    	output_exporter.export(getFilePath());
     }
     @Override
     protected void setupFileOutputBinding() {

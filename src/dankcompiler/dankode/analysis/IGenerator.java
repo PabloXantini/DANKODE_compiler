@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import dankcompiler.dankode.analysis.triplets.InstructionType;
-import dankcompiler.dankode.analysis.triplets.Tag;
 import dankcompiler.dankode.analysis.triplets.Triplet;
+import dankcompiler.dankode.analysis.triplets.args.Tag;
 import dankcompiler.parsing.ast.Node;
 import dankcompiler.parsing.ast.nodes.*;
 import dankcompiler.utils.TypeAdapter;
