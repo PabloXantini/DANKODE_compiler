@@ -1,0 +1,7 @@
+nummy papuvar_abc_Def_1;
+chara papuvar_hey#;
+papuvar_abc_Def_1 = papuvar_abc_Def_1 + 1;
+while(papuvar_abc_Def_1 <= 20 && papuvar_abc_Def_1 > papuvar_hey#){
+papuvar_abc_Def_1 = 2 + 10 * papuvar#X_ % 3;
+papuvar#X_ = papuvar_abc_Def_1 + 1;
+}
