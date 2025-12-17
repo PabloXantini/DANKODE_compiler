@@ -24,12 +24,12 @@ Variables always start with **papuvar** separated with `_` or `#`, also it can e
 2. For **assignments** you must use the symbol `=` for load a value above a variable. Thus you can use complex expression for represent a value that be computed in compilation time.
 
 3. The summarized rules for syntax is described to continuation:
-- **Declaration**: 
-* (Declaration) => _(DataType)(AssignmentList)_ `;`
-* _(AssignmentList)_ => _(Variable)_| _(Variable)_`=`_(Expression)(NextAssign)_
-* _(NextAssign)_ => `,`(AssignmentList) | ()
-- **Assignments**: (Variable)`=`(Expression)`;`
-- **While**: `while(`(Expression)`){`(Body)`}`
+	- **Declaration**: 
+		* (Declaration) => _(DataType)(AssignmentList)_ `;`
+		* _(AssignmentList)_ => _(Variable)_| _(Variable)_`=`_(Expression)(NextAssign)_
+		* _(NextAssign)_ => `,`(AssignmentList) | ()
+	- **Assignments**: (Variable)`=`(Expression)`;`
+	- **While**: `while(`(Expression)`){`(Body)`}`
 
 ### Operators and Expressions
 The operators supported by the language are:
